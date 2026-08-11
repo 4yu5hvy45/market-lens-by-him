@@ -1,0 +1,412 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * MARKET LENS design system — premium light fintech.
+ * Off-white surfaces, deep navy → blue header, restrained gold accent.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-navy: var(--navy);
+  --color-bull: var(--bull);
+  --color-bear: var(--bear);
+  --color-gold: var(--gold);
+  --color-violet: var(--violet);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.985 0.003 250);
+  --foreground: oklch(0.24 0.035 262);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.965 0.006 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.035 262);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.035 262);
+  --primary: oklch(0.53 0.19 264);
+  --primary-foreground: oklch(0.99 0.002 250);
+  --secondary: oklch(0.96 0.006 255);
+  --secondary-foreground: oklch(0.28 0.035 262);
+  --muted: oklch(0.965 0.006 255);
+  --muted-foreground: oklch(0.55 0.017 258);
+  --accent: oklch(0.95 0.02 258);
+  --accent-foreground: oklch(0.3 0.05 264);
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(0.99 0.002 250);
+  --border: oklch(0.915 0.008 258);
+  --input: oklch(0.915 0.008 258);
+  --ring: oklch(0.53 0.19 264);
+  --navy: oklch(0.21 0.06 265);
+  --bull: oklch(0.56 0.15 155);
+  --bear: oklch(0.57 0.2 25);
+  --gold: oklch(0.66 0.11 78);
+  --violet: oklch(0.55 0.16 285);
+  --chart-1: oklch(0.53 0.19 264);
+  --chart-2: oklch(0.56 0.15 155);
+  --chart-3: oklch(0.66 0.11 78);
+  --chart-4: oklch(0.57 0.2 25);
+  --chart-5: oklch(0.62 0.09 250);
+
+  --gradient-header: linear-gradient(
+    135deg,
+    oklch(0.14 0.045 268) 0%,
+    oklch(0.17 0.055 266) 45%,
+    oklch(0.21 0.075 264) 78%,
+    oklch(0.26 0.09 262) 100%
+  );
+
+
+  --gradient-blue: linear-gradient(135deg, oklch(0.45 0.18 265), oklch(0.58 0.17 258));
+  --shadow-soft: 0 1px 2px oklch(0.24 0.035 262 / 0.04), 0 12px 30px -18px oklch(0.24 0.035 262 / 0.22);
+  --shadow-lift: 0 2px 4px oklch(0.24 0.035 262 / 0.05), 0 22px 44px -26px oklch(0.24 0.035 262 / 0.3);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* White premium card with a whisper of blue */
+@utility glass {
+  background: linear-gradient(
+    170deg,
+    var(--surface) 0%,
+    color-mix(in oklab, var(--primary) 3%, var(--surface)) 100%
+  );
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility edge-gradient {
+  position: relative;
+}
+
+@utility hero-navy {
+  background: var(--gradient-header);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(70% 90% at 88% 8%, oklch(0.5 0.16 262 / 0.5), transparent 62%),
+      radial-gradient(55% 70% at 8% 100%, oklch(0.45 0.14 258 / 0.28), transparent 70%),
+      linear-gradient(to bottom, oklch(0.1 0.04 268 / 0) 55%, oklch(0.09 0.035 268 / 0.7) 100%);
+  }
+}
+
+/* Deep navy strip that continues the header instead of a grey band */
+@utility hero-foot {
+  background: linear-gradient(
+    to bottom,
+    oklch(0.16 0.05 268) 0%,
+    oklch(0.13 0.045 268) 100%
+  );
+}
+
+/* Premium dark footer that mirrors the header */
+@utility footer-navy {
+  background:
+    radial-gradient(60% 100% at 85% 0%, oklch(0.32 0.11 262 / 0.45), transparent 65%),
+    linear-gradient(to bottom, oklch(0.15 0.05 268), oklch(0.11 0.04 268));
+  color: oklch(0.97 0.005 250);
+}
+
+
+
+@utility btn-blue {
+  background: var(--gradient-blue);
+  color: oklch(0.99 0.002 250);
+  box-shadow: 0 10px 24px -14px oklch(0.45 0.18 265 / 0.9);
+  transition: filter 0.2s ease, transform 0.2s ease;
+  &:hover {
+    filter: brightness(1.08);
+  }
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+@utility text-gradient {
+  background: linear-gradient(100deg, oklch(0.62 0.17 258), oklch(0.78 0.12 250));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+
+@utility live-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility rise-in {
+  animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Premium brand surfaces ─────────────────────────────────── */
+
+@utility brand-grid {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.055) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(120% 100% at 20% 0%, black, transparent 78%);
+}
+
+@utility gold-line {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(0.8 0.12 82 / 0.65) 22%,
+    oklch(0.88 0.09 88 / 0.9) 50%,
+    oklch(0.8 0.12 82 / 0.65) 78%,
+    transparent
+  );
+}
+
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      oklch(1 0 0 / 0.35) 50%,
+      transparent
+    );
+    transform: skewX(-18deg);
+    transition: left 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  &:hover::before {
+    left: 120%;
+  }
+}
+
+@utility card-premium {
+  background:
+    linear-gradient(
+      168deg,
+      var(--surface) 0%,
+      color-mix(in oklab, var(--primary) 4%, var(--surface)) 62%,
+      color-mix(in oklab, var(--gold) 6%, var(--surface)) 100%
+    );
+  border: 1px solid color-mix(in oklab, var(--gold) 22%, var(--border));
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.9),
+    var(--shadow-soft);
+  transition: box-shadow 0.35s ease, transform 0.35s ease;
+  &:hover {
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.9),
+      var(--shadow-lift);
+    transform: translateY(-3px);
+  }
+}
+
+@utility btn-gold {
+  background: linear-gradient(135deg, oklch(0.72 0.12 82), oklch(0.84 0.1 90) 55%, oklch(0.68 0.12 74));
+  color: oklch(0.24 0.04 262);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.55),
+    0 12px 26px -16px oklch(0.66 0.11 78 / 0.95);
+  transition: filter 0.2s ease, transform 0.2s ease;
+  &:hover {
+    filter: brightness(1.06);
+  }
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+@utility lock-orb {
+  background: radial-gradient(circle at 32% 28%, oklch(1 0 0 / 0.95), oklch(0.93 0.02 258) 45%, oklch(0.86 0.02 258));
+  box-shadow:
+    inset 0 1px 2px oklch(1 0 0 / 0.9),
+    inset 0 -6px 12px oklch(0.55 0.05 262 / 0.12),
+    0 10px 22px -14px oklch(0.35 0.06 262 / 0.55);
+}
+
+@utility gold-orb {
+  background: radial-gradient(circle at 32% 26%, oklch(0.97 0.05 92), oklch(0.8 0.12 84) 52%, oklch(0.62 0.11 72));
+  box-shadow:
+    inset 0 1px 2px oklch(1 0 0 / 0.7),
+    0 12px 24px -14px oklch(0.66 0.11 78 / 0.9);
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@utility ticker-track {
+  animation: ticker-scroll 70s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  &:hover {
+    animation-play-state: paused;
+  }
+}
+
+
+@keyframes glow-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) scale(1.06);
+    opacity: 0.8;
+  }
+}
+
+@utility glow-float {
+  animation: glow-float 11s ease-in-out infinite;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+
+@layer components {
+  /* Shared admin form control */
+  .ml-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background);
+    padding: 0.7rem 0.85rem;
+    font-size: 0.875rem;
+    outline: none;
+  }
+
+  .ml-input:focus {
+    border-color: var(--color-primary);
+  }
+
+  .ml-input::placeholder {
+    color: var(--color-muted-foreground);
+  }
+}
+
+@utility pay-bar {
+  background: oklch(1 0 0 / 0.92);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -12px 30px -22px oklch(0.35 0.06 262 / 0.8);
+}
