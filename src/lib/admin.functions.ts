@@ -51,11 +51,17 @@ export const adminSaveCall = createServerFn({ method: "POST" })
     const row = toRow(data.values);
 
     if (data.id) {
-      const { error } = await db.from("calls").update(row).eq("id", data.id);
+      const { data: updated, error } = await db
+        .from("calls")
+        .update(row)
+        .eq("id", data.id)
+        .select("id")
+        .maybeSingle();
       if (error) {
         console.error("adminSaveCall update", error);
-        throw new Error(error.message);
+        throw new Error(`Could not save call: ${error.message}`);
       }
+      if (!updated) throw new Error("Could not save call: the call no longer exists.");
       return { id: data.id };
     }
 
@@ -66,7 +72,7 @@ export const adminSaveCall = createServerFn({ method: "POST" })
       .single();
     if (error) {
       console.error("adminSaveCall insert", error);
-      throw new Error(error.message);
+      throw new Error(`Could not create call: ${error.message}`);
     }
     return { id: created.id as string };
   });
@@ -149,6 +155,37 @@ export const adminCloseCall = createServerFn({ method: "POST" })
       throw new Error(error.message);
     }
     return { realisedPct };
+  });
+
+/** Re-list a previously closed/archived call as live after validating its content. */
+export const adminRelistCall = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => callId.parse(input))
+  .handler(async ({ data }) => {
+    const { requireAdminSession } = await import("./admin-session.server");
+    await requireAdminSession();
+    const { adminClient } = await import("./calls.server");
+    const db = await adminClient();
+
+    const { data: call } = await db.from("calls").select("*").eq("id", data.callId).maybeSingle();
+    if (!call) throw new Error("Call not found.");
+    if (!["closed", "archived", "draft"].includes(String(call.state))) {
+      throw new Error("Only a closed, archived or draft call can be re-listed.");
+    }
+    const blockers: string[] = [];
+    if (!Array.isArray(call.research) || call.research.length === 0) blockers.push("Add at least one research block before publishing.");
+    if (Number(call.price_inr) <= 0) blockers.push("A live call needs a price above 0.");
+    if (!call.summary) blockers.push("Add a short summary before publishing.");
+    if (!call.view_text) blockers.push("Add the desk view before publishing.");
+    if (blockers.length) throw new Error(blockers.join(" "));
+
+    const { error } = await db.from("calls")
+      .update({ state: "live", price_inr: Number(call.price_inr), published_at: new Date().toISOString(), closed_at: null, exit_price: null })
+      .eq("id", data.callId);
+    if (error) {
+      console.error("adminRelistCall", error);
+      throw new Error(error.code === "23505" ? `Slot ${call.call_number} already has a live call. Close it first.` : error.message);
+    }
+    return { ok: true };
   });
 
 /** closed → archived (or pull a draft/live call out of rotation). */

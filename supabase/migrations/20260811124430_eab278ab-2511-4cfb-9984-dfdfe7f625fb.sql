@@ -63,6 +63,8 @@ CREATE TABLE public.calls (
   catalysts jsonb NOT NULL DEFAULT '[]'::jsonb,
   series jsonb NOT NULL DEFAULT '[]'::jsonb,
   chart_image text,
+  checkout_headline text NOT NULL DEFAULT '',
+  checkout_subtext text NOT NULL DEFAULT '',
 
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
@@ -108,6 +110,8 @@ SELECT
   c.series,
   c.published_at,
   c.closed_at,
+  c.checkout_headline,
+  c.checkout_subtext,
   ROUND(((c.target - c.entry) / c.entry) * 100 * CASE WHEN c.direction = 'short' THEN -1 ELSE 1 END, 2) AS potential_pct,
   ROUND(ABS((c.entry - c.stop_loss) / c.entry) * 100, 2) AS risk_pct,
   CASE WHEN c.state = 'live' THEN NULL ELSE c.stock_name END AS stock_name,

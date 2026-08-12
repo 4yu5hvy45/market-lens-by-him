@@ -20,6 +20,8 @@ export type Database = {
           catalysts: Json
           change_pct: number
           chart_image: string | null
+          checkout_headline: string
+          checkout_subtext: string
           closed_at: string | null
           confidence: number
           coverage: string
@@ -52,6 +54,8 @@ export type Database = {
           catalysts?: Json
           change_pct?: number
           chart_image?: string | null
+          checkout_headline?: string
+          checkout_subtext?: string
           closed_at?: string | null
           confidence?: number
           coverage?: string
@@ -84,6 +88,8 @@ export type Database = {
           catalysts?: Json
           change_pct?: number
           chart_image?: string | null
+          checkout_headline?: string
+          checkout_subtext?: string
           closed_at?: string | null
           confidence?: number
           coverage?: string
@@ -292,6 +298,8 @@ export type Database = {
           catalysts: Json | null
           change_pct: number | null
           chart_image: string | null
+          checkout_headline: string | null
+          checkout_subtext: string | null
           closed_at: string | null
           confidence: number | null
           coverage: string | null
@@ -324,6 +332,8 @@ export type Database = {
           catalysts?: never
           change_pct?: never
           chart_image?: never
+          checkout_headline?: never
+          checkout_subtext?: never
           closed_at?: string | null
           confidence?: number | null
           coverage?: string | null
@@ -356,6 +366,8 @@ export type Database = {
           catalysts?: never
           change_pct?: never
           chart_image?: never
+          checkout_headline?: never
+          checkout_subtext?: never
           closed_at?: string | null
           confidence?: number | null
           coverage?: string | null

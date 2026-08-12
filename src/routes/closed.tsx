@@ -55,7 +55,7 @@ function ClosedCalls() {
           </div>
           <h1 className="mt-3 font-display text-3xl font-bold md:text-4xl">Closed Trades</h1>
         </div>
-        <div className="grid grid-cols-3 gap-8">
+        <div className="grid grid-cols-3 gap-4 sm:gap-8">
           <Stat label="Hit rate" value={`${Math.round((wins / Math.max(closed.length, 1)) * 100)}%`} />
           <Stat label="Avg return" value={fmtPct(avg)} tone={avg >= 0 ? "text-bull" : "text-bear"} />
           <Stat label="Best call" value={fmtPct(best)} tone="text-bull" />

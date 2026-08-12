@@ -77,14 +77,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Market Lens by HIM — Live Equity Calls & Research" },
       { name: "description", content: "Premium equity research desk. Live calls with entry, target, stop loss and potential — research free once a call closes." },
       { name: "author", content: "Market Lens by HIM" },
       { property: "og:title", content: "Market Lens by HIM" },
       { property: "og:description", content: "Live equity calls, closed track record and a full research archive." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://marketlensbyhim.com/og-image.png" },
+      { property: "og:image:width", content: "2400" },
+      { property: "og:image:height", content: "1260" },
+      { property: "og:image:type", content: "image/png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://marketlensbyhim.com/og-image.png" },
       
     ],
     links: [
@@ -93,6 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon-512.png", type: "image/png", sizes: "512x512" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

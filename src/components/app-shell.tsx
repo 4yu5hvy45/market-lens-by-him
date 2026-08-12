@@ -10,7 +10,7 @@ export function AppShell({ children, hero }: { children: ReactNode; hero?: React
       <div className="hero-navy">
 
 
-        <div className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-8 md:py-5">
+        <div className="app-header relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-8 md:py-5">
           <BrandLogo onDark />
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -37,7 +37,7 @@ export function AppShell({ children, hero }: { children: ReactNode; hero?: React
         </div>
 
         {hero && (
-          <div className="relative z-10 mx-auto max-w-6xl px-4 pb-12 pt-6 md:px-8 md:pb-20 md:pt-10">
+          <div className="relative z-10 mx-auto max-w-6xl min-w-0 px-4 pb-12 pt-6 md:px-8 md:pb-20 md:pt-10">
             {hero}
           </div>
         )}
@@ -45,7 +45,7 @@ export function AppShell({ children, hero }: { children: ReactNode; hero?: React
 
       <MarketTicker />
 
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 md:px-8 md:pt-12">{children}</main>
+      <main className="mx-auto max-w-6xl min-w-0 overflow-x-clip px-4 pb-20 pt-8 md:px-8 md:pt-12">{children}</main>
 
       <footer className="footer-navy mt-24">
         <div className="mx-auto max-w-6xl px-4 py-14 md:px-8">

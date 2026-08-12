@@ -4,6 +4,7 @@ import { z } from "zod";
 export const callInputSchema = z
   .object({
     callNumber: z.coerce.number().int().min(1, "Slot must be 1-3").max(3, "Slot must be 1-3"),
+    state: z.enum(["draft", "live", "closed", "archived"]).default("draft"),
     price: z.coerce.number().int().min(0, "Price cannot be negative").max(100000),
     stock: z.string().trim().min(2, "Stock name is required").max(120),
     ticker: z.string().trim().min(1, "Ticker is required").max(24),

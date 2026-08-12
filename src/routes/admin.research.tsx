@@ -145,7 +145,7 @@ function AdminResearch() {
 
   return (
     <AppShell>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div className="min-w-0">
           <Link
             to="/admin"
@@ -164,7 +164,7 @@ function AdminResearch() {
             setError(null);
             setDraft({ ...EMPTY });
           }}
-          className="btn-blue sheen flex shrink-0 items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold"
+          className="btn-blue sheen flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold sm:w-auto sm:shrink-0"
         >
           <Plus className="h-4 w-4" /> New note
         </button>

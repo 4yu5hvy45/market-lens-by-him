@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Archive, CheckCircle2, FileBarChart, LogOut, PencilLine, Plus, Radio } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AdminGate, adminSignOut } from "@/components/admin-gate";
@@ -27,7 +27,13 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
-  const { calls, closeCall, archiveCall, publishCall } = useCalls();
+  const { calls, refreshAdmin, closeCall, archiveCall, publishCall } = useCalls();
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void refreshAdmin().catch((err) => setActionError(err instanceof Error ? err.message : "Could not load the admin desk."));
+  }, [refreshAdmin]);
   const navigate = useNavigate();
   const [closing, setClosing] = useState<string | null>(null);
   const [exit, setExit] = useState("");
@@ -37,18 +43,18 @@ function AdminDashboard() {
 
   return (
     <AppShell>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-extrabold md:text-4xl">Admin desk</h1>
           <p className="mt-1 text-xs text-muted-foreground">
             Three live slots (1-3). Publish live + paid; close a call to open it free for everyone.
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:shrink-0">
           <button
             type="button"
             onClick={() => navigate({ to: "/admin/editor/$callId", params: { callId: "new" } })}
-            className="btn-blue sheen flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold"
+            className="btn-blue sheen flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold sm:flex-none"
           >
             <Plus className="h-4 w-4" /> New call
           </button>
@@ -63,6 +69,12 @@ function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {actionError && (
+        <p role="alert" className="mt-4 rounded-xl bg-bear/10 px-4 py-3 text-xs font-medium text-bear">
+          {actionError}
+        </p>
+      )}
 
       <div className="mt-5 grid gap-2">
         <Link
@@ -93,7 +105,7 @@ function AdminDashboard() {
       <div className="mt-3 space-y-3">
         {live.map((c) => (
           <div key={c.id} className="glass rounded-2xl p-4">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+            <div className="grid min-w-0 grid-cols-1 items-start gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="num grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-navy text-[11px] font-extrabold text-white">
@@ -124,10 +136,18 @@ function AdminDashboard() {
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    closeCall(c.id, Number(exit) || c.currentPrice);
-                    setClosing(null);
-                    setExit("");
+                  onClick={async () => {
+                    setActionError(null);
+                    setBusyId(c.id);
+                    try {
+                      await closeCall(c.id, Number(exit) || c.currentPrice);
+                      setClosing(null);
+                      setExit("");
+                    } catch (err) {
+                      setActionError(err instanceof Error ? err.message : "Could not close the call.");
+                    } finally {
+                      setBusyId(null);
+                    }
                   }}
                   className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground"
                 >
@@ -159,7 +179,10 @@ function AdminDashboard() {
                     setExit(String(c.currentPrice));
                   }}
                 />
-                <Action icon={Archive} label="Archive" onClick={() => archiveCall(c.id)} />
+                <Action icon={Archive} label={busyId === c.id ? "Saving…" : "Archive"} onClick={async () => {
+                  setActionError(null); setBusyId(c.id);
+                  try { await archiveCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not archive the call."); } finally { setBusyId(null); }
+                }} />
               </div>
             )}
           </div>
@@ -167,13 +190,13 @@ function AdminDashboard() {
       </div>
 
       <h2 className="mt-8 text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">
-        Closed & archived
+        Drafts, closed & archived
       </h2>
       <div className="mt-3 space-y-2 pb-6">
         {rest.map((c) => (
           <div
             key={c.id}
-            className="glass grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl px-4 py-3"
+            className="glass grid min-w-0 grid-cols-1 items-start gap-2 rounded-2xl px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3"
           >
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">
@@ -187,16 +210,22 @@ function AdminDashboard() {
                 {c.closedAt ? fmtDate(c.closedAt) : "—"}
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:flex-nowrap">
               <span
                 className={`num text-sm font-bold ${closedPnlPct(c) >= 0 ? "text-bull" : "text-bear"}`}
               >
                 {fmtPct(closedPnlPct(c))}
               </span>
               {c.status === "closed" ? (
-                <Action icon={Archive} label="Archive" onClick={() => archiveCall(c.id)} />
+                <Action icon={Archive} label={busyId === c.id ? "Saving…" : "Archive"} onClick={async () => {
+                  setActionError(null); setBusyId(c.id);
+                  try { await archiveCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not archive the call."); } finally { setBusyId(null); }
+                }} />
               ) : (
-                <Action icon={Radio} label="Relist" onClick={() => publishCall(c.id)} />
+                <Action icon={Radio} label={busyId === c.id ? "Saving…" : "Relist"} onClick={async () => {
+                  setActionError(null); setBusyId(c.id);
+                  try { await publishCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not relist the call."); } finally { setBusyId(null); }
+                }} />
               )}
               <Link
                 to="/call/$callId"

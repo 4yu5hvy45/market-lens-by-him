@@ -39,7 +39,9 @@ type Row = Record<string, unknown>;
 /** Maps a row of the public projection view (paid columns arrive as NULL while live). */
 export function mapPublic(row: Row): PublicCall {
   const state = row["state"] as PublicCall["state"];
-  const locked = state === "live" && row["entry"] === null;
+  // Live calls are intentionally locked. The base table contains the real entry/target
+  // values, so locking cannot depend on a NULL projection value when we read the base table.
+  const locked = state === "live";
   return {
     id: String(row["id"]),
     callNumber: Number(row["call_number"]),

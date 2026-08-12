@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ImageUp, Save, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AdminGate } from "@/components/admin-gate";
@@ -69,14 +69,24 @@ const DEFAULT_CHECKOUT_SUBTEXT =
 
 function CallEditor() {
   const { callId } = useParams({ from: "/admin/editor/$callId" });
-  const { getCall, createCall, updateCall, calls } = useCalls();
+  const { getCall, createCall, updateCall, calls, refreshAdmin } = useCalls();
   const navigate = useNavigate();
   const existing = callId === "new" ? undefined : getCall(callId);
   const [form, setForm] = useState<StockCall>(existing ?? blank());
   const fileRef = useRef<HTMLInputElement>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const set = <K extends keyof StockCall>(k: K, v: StockCall[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    void refreshAdmin().catch((err) => setError(err instanceof Error ? err.message : "Could not load the call."));
+  }, [refreshAdmin]);
+
+  useEffect(() => {
+    if (existing) setForm(existing);
+  }, [existing?.id]);
 
   const slotTaken = calls.find(
     (c) => c.status === "live" && c.callNumber === form.callNumber && c.id !== form.id,
@@ -89,14 +99,23 @@ function CallEditor() {
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
-    if (existing) updateCall(existing.id, form);
-    else createCall(form);
-    navigate({ to: "/admin" });
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      if (existing) await updateCall(existing.id, form);
+      else await createCall(form);
+      navigate({ to: "/admin" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save the call.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <AppShell>
+      <div className="min-w-0">
       <button
         type="button"
         onClick={() => navigate({ to: "/admin" })}
@@ -112,6 +131,12 @@ function CallEditor() {
         Everything here renders on the public call sheet exactly as the research note layout.
       </p>
 
+      {error && (
+        <p role="alert" className="mt-4 rounded-xl bg-bear/10 px-4 py-3 text-xs font-medium leading-relaxed text-bear">
+          {error}
+        </p>
+      )}
+
       <div className="mt-6 space-y-4 pb-10">
         <Card title="Desk slot & access">
           <Select
@@ -123,7 +148,7 @@ function CallEditor() {
           <Select
             label="Status"
             value={form.status}
-            options={["live", "closed", "archived"]}
+            options={["draft", "live", "closed", "archived"]}
             onChange={(v) => set("status", v as StockCall["status"])}
           />
           <Select
@@ -300,11 +325,13 @@ function CallEditor() {
         <button
           type="button"
           onClick={save}
-          className="btn-blue sheen flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.16em]"
+          disabled={saving}
+          className="btn-blue sheen flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.16em] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Save className="h-4 w-4" />
-          {existing ? "Save changes" : `Publish as call no. ${form.callNumber}`}
+          {saving ? "Saving…" : existing ? "Save changes" : `Publish as call no. ${form.callNumber}`}
         </button>
+      </div>
       </div>
     </AppShell>
   );

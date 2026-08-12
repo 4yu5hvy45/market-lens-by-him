@@ -41,6 +41,8 @@ export interface PublicCall {
   research?: ResearchBlock[];
   catalysts?: string[];
   chartImage?: string;
+  checkoutHeadline?: string;
+  checkoutSubtext?: string;
 }
 
 /** A fully readable call: every paid field is guaranteed present. */
@@ -82,7 +84,7 @@ export const TERMS = ["Short Term", "Swing", "Positional", "Long Term"] as const
  * Legacy model, still used by the current UI while pages are migrated to the
  * database-backed PublicCall/FullCall types above.
  * ------------------------------------------------------------------------ */
-export type CallStatus = "live" | "closed" | "archived";
+export type CallStatus = "draft" | "live" | "closed" | "archived";
 export type AccessTier = "paid" | "free";
 export type Term = "Short Term" | "Swing" | "Positional" | "Long Term";
 
@@ -121,16 +123,18 @@ export interface StockCall {
 }
 
 export const potentialPct = (c: StockCall) =>
-  ((c.target - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1);
+  c.entry > 0 ? ((c.target - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1) : 0;
 
 export const riskPct = (c: StockCall) =>
-  Math.abs((c.entry - c.stopLoss) / c.entry) * 100;
+  c.entry > 0 ? Math.abs((c.entry - c.stopLoss) / c.entry) * 100 : 0;
 
 export const livePnlPct = (c: StockCall) =>
-  ((c.currentPrice - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1);
+  c.entry > 0 && Number.isFinite(c.currentPrice)
+    ? ((c.currentPrice - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1)
+    : 0;
 
 export const closedPnlPct = (c: StockCall) =>
-  c.exitPrice
+  c.exitPrice && c.entry > 0
     ? ((c.exitPrice - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1)
     : 0;
 
