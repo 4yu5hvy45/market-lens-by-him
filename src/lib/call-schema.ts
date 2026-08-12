@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeSeries } from "./series";
 
 /** Shared admin form contract — used by both the browser form and the server. */
 export const callInputSchema = z
@@ -32,7 +33,8 @@ export const callInputSchema = z
       )
       .default([]),
     catalysts: z.array(z.string().trim().min(1).max(120)).max(10).default([]),
-    series: z.array(z.number()).max(400).default([]),
+    // Accept legacy JSON object points and normalise them before validation.
+    series: z.preprocess((value) => normalizeSeries(value), z.array(z.number()).max(400).default([])),
     chartImage: z.string().max(2_000_000).optional(),
     checkoutHeadline: z.string().trim().max(180).default(""),
     checkoutSubtext: z.string().trim().max(1200).default(""),

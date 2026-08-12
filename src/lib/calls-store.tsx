@@ -19,6 +19,7 @@ import {
   adminArchiveCall,
 } from "./admin.functions";
 import type { FullCall, PublicCall, StockCall } from "./types";
+import { normalizeSeries } from "./series";
 
 interface CallsContextValue {
   calls: StockCall[];
@@ -65,7 +66,7 @@ function toStockCall(c: PublicCall): StockCall {
     summary: c.summary ?? "",
     research: c.research ?? [],
     catalysts: c.catalysts ?? [],
-    series: c.series ?? [],
+    series: normalizeSeries(c.series),
     confidence: c.confidence,
     checkoutHeadline: c.checkoutHeadline,
     checkoutSubtext: c.checkoutSubtext,
@@ -106,7 +107,7 @@ function toInput(c: StockCall) {
     view: c.view,
     research: c.research,
     catalysts: c.catalysts,
-    series: c.series,
+    series: normalizeSeries(c.series),
     chartImage: c.chartImage,
     checkoutHeadline: c.checkoutHeadline ?? "",
     checkoutSubtext: c.checkoutSubtext ?? "",

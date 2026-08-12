@@ -31,3 +31,7 @@ This build is based on the mobile-responsive Market Lens project and includes th
 
 ## Database note
 The current production database already has the missing checkout columns because they were added manually during setup. The included Supabase migration also contains the fix so a fresh database receives the same schema.
+
+## 2026-08-12 — Legacy chart series compatibility fix
+
+Fixed Admin edit/save failures caused by legacy `calls.series` JSON containing objects instead of the current `number[]` contract. Added a central normalizer that accepts numeric points and common legacy object shapes (`value`, `y`, `price`, `close`, `currentPrice`, `v`) and converts them to numbers before validation and rendering. Admin saves now write the normalized numeric series back to Supabase.

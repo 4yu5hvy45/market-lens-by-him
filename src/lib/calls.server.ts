@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { PublicCall, FullCall, ResearchBlock } from "./types";
+import { normalizeSeries } from "./series";
 
 /** Publishable (anon) client used for the safe public projection view. */
 export function publicClient(): SupabaseClient {
@@ -54,7 +55,7 @@ export function mapPublic(row: Row): PublicCall {
     segment: String(row["segment"] ?? ""),
     timeframe: String(row["timeframe"] ?? ""),
     confidence: Number(row["confidence"] ?? 0),
-    series: (row["series"] as number[] | null) ?? [],
+    series: normalizeSeries(row["series"]),
     publishedAt: (row["published_at"] as string | null) ?? null,
     closedAt: (row["closed_at"] as string | null) ?? null,
     potentialPct: Number(row["potential_pct"] ?? 0),
@@ -104,7 +105,7 @@ export function mapFull(row: Row): FullCall {
     segment: String(row["segment"] ?? ""),
     timeframe: String(row["timeframe"] ?? ""),
     confidence: Number(row["confidence"] ?? 0),
-    series: (row["series"] as number[] | null) ?? [],
+    series: normalizeSeries(row["series"]),
     publishedAt: (row["published_at"] as string | null) ?? null,
     closedAt: (row["closed_at"] as string | null) ?? null,
     potentialPct: Number((((target - entry) / entry) * 100 * sign).toFixed(2)),
