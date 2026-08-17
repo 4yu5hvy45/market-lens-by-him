@@ -100,6 +100,8 @@ export interface StockCall {
   status: CallStatus;
   access: AccessTier;
   price: number;
+  /** Optional editorial override for the public “Potential” figure. */
+  potentialLeft?: number;
   currentPrice: number;
   entry: number;
   target: number;
@@ -123,7 +125,11 @@ export interface StockCall {
 }
 
 export const potentialPct = (c: StockCall) =>
-  c.entry > 0 ? ((c.target - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1) : 0;
+  Number.isFinite(c.potentialLeft) && c.potentialLeft !== 0
+    ? c.potentialLeft
+    : c.entry > 0
+      ? ((c.target - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1)
+      : 0;
 
 export const riskPct = (c: StockCall) =>
   c.entry > 0 ? Math.abs((c.entry - c.stopLoss) / c.entry) * 100 : 0;

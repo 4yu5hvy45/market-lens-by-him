@@ -43,6 +43,19 @@ export function mapPublic(row: Row): PublicCall {
   // Live calls are intentionally locked. The base table contains the real entry/target
   // values, so locking cannot depend on a NULL projection value when we read the base table.
   const locked = state === "live";
+  const entry = Number(row["entry"] ?? 0);
+  const target = Number(row["target"] ?? 0);
+  const direction = row["direction"] as PublicCall["direction"];
+  const sign = direction === "short" ? -1 : 1;
+  const override = Number(row["potential_pct_override"]);
+  const computedPotential = entry > 0 && target > 0
+    ? Number((((target - entry) / entry) * 100 * sign).toFixed(2))
+    : 0;
+  const publicPotential = Number.isFinite(override) && override !== 0 ? override : computedPotential;
+  const stopLoss = Number(row["stop_loss"] ?? 0);
+  const publicRisk = entry > 0 && stopLoss > 0
+    ? Number((Math.abs((entry - stopLoss) / entry) * 100).toFixed(2))
+    : 0;
   return {
     id: String(row["id"]),
     callNumber: Number(row["call_number"]),
@@ -58,8 +71,8 @@ export function mapPublic(row: Row): PublicCall {
     series: normalizeSeries(row["series"]),
     publishedAt: (row["published_at"] as string | null) ?? null,
     closedAt: (row["closed_at"] as string | null) ?? null,
-    potentialPct: Number(row["potential_pct"] ?? 0),
-    riskPct: Number(row["risk_pct"] ?? 0),
+    potentialPct: publicPotential,
+    riskPct: publicRisk,
     locked,
     checkoutHeadline: String(row["checkout_headline"] ?? ""),
     checkoutSubtext: String(row["checkout_subtext"] ?? ""),
@@ -108,7 +121,9 @@ export function mapFull(row: Row): FullCall {
     series: normalizeSeries(row["series"]),
     publishedAt: (row["published_at"] as string | null) ?? null,
     closedAt: (row["closed_at"] as string | null) ?? null,
-    potentialPct: Number((((target - entry) / entry) * 100 * sign).toFixed(2)),
+    potentialPct: Number.isFinite(Number(row["potential_pct_override"])) && Number(row["potential_pct_override"]) !== 0
+      ? Number(row["potential_pct_override"])
+      : Number((((target - entry) / entry) * 100 * sign).toFixed(2)),
     riskPct: Number((Math.abs((entry - stopLoss) / entry) * 100).toFixed(2)),
     locked: false,
     stock: String(row["stock_name"] ?? ""),

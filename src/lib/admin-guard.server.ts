@@ -4,6 +4,7 @@ export function toRow(v: CallDraftParsed) {
   return {
     call_number: v.callNumber,
     price_inr: v.price,
+    potential_pct_override: Number.isFinite(v.potentialLeft) && v.potentialLeft !== 0 ? v.potentialLeft : null,
     stock_name: v.stock.trim() || null,
     ticker: v.ticker.trim() || null,
     exchange: v.exchange,

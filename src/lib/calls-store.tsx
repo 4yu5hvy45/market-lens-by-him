@@ -32,7 +32,7 @@ interface CallsContextValue {
   archiveCall: (id: string) => Promise<void>;
   publishCall: (id: string) => Promise<void>;
   duplicateCall: (id: string) => Promise<{ id: string; callNumber: number }>;
-  unlock: (id: string) => void;
+  unlock: (id: string, accessToken?: string) => Promise<void>;
   unlocked: string[];
 }
 
@@ -52,6 +52,7 @@ function toStockCall(c: PublicCall): StockCall {
     status: c.state === "draft" ? "live" : c.state,
     access: c.locked ? "paid" : "free",
     price: c.price,
+    potentialLeft: c.potentialPct,
     currentPrice: c.currentPrice ?? 0,
     entry: c.entry ?? 0,
     target: c.target ?? 0,
@@ -90,6 +91,7 @@ function toInput(c: StockCall) {
     callNumber: c.callNumber,
     state: c.status,
     price: c.price,
+    potentialLeft: c.potentialLeft ?? 0,
     stock: c.stock,
     ticker: c.ticker,
     exchange: c.exchange,
@@ -135,8 +137,34 @@ export function CallsProvider({ children }: { children: ReactNode }) {
 
   const refreshPublic = useCallback(async () => {
     const next = await fetchCalls();
-    setCalls(next.map(toStockCall));
-  }, [fetchCalls]);
+    const mapped = next.map(toStockCall);
+    setCalls(mapped);
+    const storedIds = (() => {
+      try {
+        const raw = window.localStorage.getItem(UNLOCK_KEY);
+        return raw ? (JSON.parse(raw) as string[]) : [];
+      } catch {
+        return [];
+      }
+    })();
+    if (storedIds.length) {
+      const fullCalls = await Promise.all(
+        storedIds.map(async (id) => {
+          try {
+            return await fetchContent({ data: { callId: id } });
+          } catch {
+            return null;
+          }
+        }),
+      );
+      setCalls((prev) =>
+        prev.map((call) => {
+          const full = fullCalls.find((candidate) => candidate?.id === call.id);
+          return full ? toStockCall(full) : call;
+        }),
+      );
+    }
+  }, [fetchCalls, fetchContent]);
 
   const refreshAdmin = useCallback(async () => {
     const next = await fetchAdminCalls();
@@ -209,12 +237,12 @@ export function CallsProvider({ children }: { children: ReactNode }) {
     return result;
   }, [duplicate, refreshAdmin]);
 
-  const unlock = useCallback((id: string) => {
+  const unlock = useCallback(async (id: string, accessToken?: string) => {
     const next = unlocked.includes(id) ? unlocked : [...unlocked, id];
     persistUnlock(next);
-    void fetchContent({ data: { callId: id } }).then((full) => {
-      if (full) setCalls((prev) => prev.map((c) => c.id === id ? toStockCall(full) : c));
-    }).catch((err) => console.error("unlock call", err));
+    const full = await fetchContent({ data: { callId: id, accessToken } });
+    if (!full) throw new Error("The payment was verified, but the unlocked call could not be loaded.");
+    setCalls((prev) => prev.map((c) => (c.id === id ? toStockCall(full) : c)));
   }, [fetchContent, persistUnlock, unlocked]);
 
   const value = useMemo(() => ({

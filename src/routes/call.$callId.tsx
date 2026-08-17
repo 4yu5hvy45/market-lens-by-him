@@ -29,7 +29,7 @@ export const Route = createFileRoute("/call/$callId")({
 
 function CallDetail() {
   const { callId } = useParams({ from: "/call/$callId" });
-  const { getCall, unlocked } = useCalls();
+  const { getCall } = useCalls();
   const call = getCall(callId);
 
   if (!call) {
@@ -43,7 +43,8 @@ function CallDetail() {
   }
 
   const closed = call.status !== "live";
-  const locked = call.access === "paid" && !closed && !unlocked.includes(call.id);
+  const hasFullContent = Boolean(call.stock && call.entry && call.target && call.stopLoss);
+  const locked = call.access === "paid" && !closed && !hasFullContent;
 
   if (locked) return <LockedSheet call={call} />;
 

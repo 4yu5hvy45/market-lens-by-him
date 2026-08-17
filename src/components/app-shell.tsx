@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Phone, Send, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
 import { MarketTicker } from "./market-ticker";
 
@@ -63,25 +63,6 @@ export function AppShell({ children, hero }: { children: ReactNode; hero?: React
                 Contact the desk
               </div>
               <div className="mt-4 flex flex-col gap-2.5 md:items-end">
-                <a
-                  href="https://t.me/Himanshuuu15"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-white/90 transition-colors hover:border-white/30"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  @Himanshuuu15
-                  <span className="text-[9px] font-medium uppercase tracking-[0.18em] text-white/40">
-                    Telegram
-                  </span>
-                </a>
-                <a
-                  href="tel:+918959227202"
-                  className="inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-white/90 transition-colors hover:border-white/30"
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                  <span className="num">+91 89592 27202</span>
-                </a>
                 <a
                   href="mailto:marketlensbyhim@gmail.com"
                   className="inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-white/90 transition-colors hover:border-white/30"

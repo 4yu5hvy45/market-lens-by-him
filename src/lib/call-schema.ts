@@ -14,6 +14,7 @@ export const callDraftSchema = z.object({
   callNumber: z.coerce.number().int().min(1).max(10),
   state: z.enum(["draft", "live", "closed", "archived"]).default("draft"),
   price: z.coerce.number().min(0).default(499),
+  potentialLeft: z.coerce.number().default(0),
   stock: z.string().default(""),
   ticker: z.string().default(""),
   exchange: z.string().default("NSE / BSE"),

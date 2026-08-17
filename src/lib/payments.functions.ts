@@ -147,11 +147,21 @@ export const confirmPayment = createServerFn({ method: "POST" })
       throw new Error("Payment was verified, but access could not be activated.");
     }
 
+    const accessToken = String(updated?.access_token ?? purchase.access_token);
+    try {
+      const { grantCallAccess } = await import("./customer-session.server");
+      await grantCallAccess(String(callId), accessToken);
+    } catch (sessionError) {
+      // Immediate access is still delivered through the verified access token;
+      // the session is a persistence convenience for later refreshes.
+      console.error("confirmPayment: could not persist customer session", sessionError);
+    }
+
     return {
       callId: String(callId),
       paymentId: data.paymentId,
       orderId: data.orderId,
-      accessToken: String(updated?.access_token ?? purchase.access_token),
+      accessToken,
     };
   });
 

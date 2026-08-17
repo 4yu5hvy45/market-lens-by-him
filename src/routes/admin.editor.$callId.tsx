@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ImageUp, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, ImageUp, Save, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { ResearchNote } from "@/components/research-note";
 import { AdminGate } from "@/components/admin-gate";
 import { useCalls } from "@/lib/calls-store";
 import type { StockCall, Term } from "@/lib/types";
@@ -41,6 +42,7 @@ const blank = (): StockCall => ({
   status: "draft",
   access: "paid",
   price: 499,
+  potentialLeft: 0,
   currentPrice: 0,
   changePct: 0,
   entry: 0,
@@ -152,7 +154,8 @@ function CallEditor() {
         </p>
       )}
 
-      <div className="mt-6 space-y-4 pb-10">
+      <div className="mt-6 grid gap-6 pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.9fr)] lg:items-start">
+        <div className="min-w-0 space-y-4">
         <Card title="Desk slot & access">
           <Select
             label="Call number (desk slot)"
@@ -213,6 +216,12 @@ function CallEditor() {
           <Num label="Entry level" value={form.entry} placeholder="e.g. 680" onChange={(v) => set("entry", v)} />
           <Num label="Target level" value={form.target} placeholder="e.g. 780" onChange={(v) => set("target", v)} />
           <Num label="Stop loss" value={form.stopLoss} placeholder="e.g. 640" onChange={(v) => set("stopLoss", v)} />
+          <Num
+            label="Potential left (%)"
+            value={form.potentialLeft ?? 0}
+            placeholder="e.g. 11.1"
+            onChange={(v) => set("potentialLeft", v)}
+          />
           <Select
             label="Term"
             value={form.term}
@@ -329,7 +338,26 @@ function CallEditor() {
           <Save className="h-4 w-4" />
           {saving ? "Saving…" : existing ? "Save changes" : "Save draft"}
         </button>
-      </div>
+        </div>
+
+        <aside className="min-w-0 lg:sticky lg:top-6">
+          <section className="glass overflow-hidden rounded-3xl p-4 md:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  <Eye className="h-4 w-4" /> Live preview
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  This uses the same research-note component shown on the customer call page.
+                </p>
+              </div>
+              <span className="rounded-full border border-bull/25 bg-bull/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-bull">
+                {form.status === "live" ? "Live output" : "Draft preview"}
+              </span>
+            </div>
+            <ResearchNote call={form} />
+          </section>
+        </aside>
       </div>
     </AppShell>
   );
