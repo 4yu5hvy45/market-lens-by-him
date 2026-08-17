@@ -2,58 +2,85 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const paymentInput = z.object({
-  callId: z.string().min(1).max(120),
-  // In demo/test mode the admin-edited local price is sent to the server so
-  // Razorpay Test orders reflect the current browser-local call catalogue.
-  // This MUST be replaced with a database-backed server price before production.
-  price: z.coerce.number().finite().positive().max(100000),
+  callId: z.string().uuid(),
 });
 
 /**
- * Test/iteration payment flow:
- * - Uses the local mock call catalogue, so Supabase is NOT required.
- * - Creates a real Razorpay order using the configured TEST key pair.
- * - The order stores the call id in Razorpay notes so the payment can be
- *   verified without a database.
+ * Production payment flow:
+ * - Reads the live call and price from Supabase (never trusts the browser price).
+ * - Creates a Razorpay order using the server-side key pair.
+ * - Creates a matching `purchases` row before opening Checkout.
  */
 export const startPurchase = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => paymentInput.parse(input))
   .handler(async ({ data }) => {
-    const { mockCalls } = await import("./mock-calls");
+    const { adminClient } = await import("./calls.server");
     const { razorpayConfig, createRazorpayOrder } = await import("./razorpay.server");
 
-    const call = mockCalls.find((item) => item.id === data.callId);
+    const db = await adminClient();
+
+    const { data: call, error: callError } = await db
+      .from("calls")
+      .select("id, call_number, state, price_inr")
+      .eq("id", data.callId)
+      .maybeSingle();
+
+    if (callError) {
+      console.error("startPurchase: call lookup failed", callError);
+      throw new Error("Could not load this call.");
+    }
+
     if (!call) throw new Error("This call is unavailable.");
-    if (call.status !== "live") throw new Error("This call is no longer on sale.");
+    if (call.state !== "live") throw new Error("This call is no longer on sale.");
+
+    const amount = Number(call.price_inr);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error("This call has an invalid price.");
+    }
 
     const cfg = razorpayConfig();
     if (!cfg) {
       throw new Error(
-        "Razorpay Test Mode is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your environment.",
+        "Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to the server environment.",
       );
     }
 
-    const demoTestMode = process.env["DEMO_TEST_MODE"] !== "false";
-    const amount = demoTestMode ? Number(data.price) : Number(call.price);
-    if (!Number.isFinite(amount) || amount <= 0) throw new Error("Invalid call price.");
+    const receipt = `ml-${call.call_number}-${Date.now()}`;
 
     const order = await createRazorpayOrder(cfg, {
       amountPaise: Math.round(amount * 100),
-      receipt: `ml-${call.callNumber}-${Date.now()}`,
-      notes: { call_id: call.id, mode: "test", amount_inr: amount.toFixed(2) },
+      receipt,
+      notes: {
+        call_id: String(call.id),
+        call_number: String(call.call_number),
+        amount_inr: amount.toFixed(2),
+        source: "market-lens",
+      },
     });
+
+    const { error: purchaseError } = await db.from("purchases").insert({
+      call_id: String(call.id),
+      razorpay_order_id: order.id,
+      amount: Math.round(amount),
+      currency: "INR",
+      status: "created",
+    });
+
+    if (purchaseError) {
+      console.error("startPurchase: purchase insert failed", purchaseError);
+      throw new Error("Could not prepare the payment. Please try again.");
+    }
 
     return {
       orderId: order.id,
       amount,
       keyId: cfg.keyId,
-      testMode: true,
     };
   });
 
 /**
- * Verifies Razorpay's checkout signature and resolves the order's call id
- * directly from Razorpay. No Supabase/database is needed in this iteration.
+ * Verifies the Checkout signature and immediately marks the matching purchase
+ * paid. The webhook remains the server-to-server backup/reconciliation path.
  */
 export const confirmPayment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
@@ -70,7 +97,7 @@ export const confirmPayment = createServerFn({ method: "POST" })
       await import("./razorpay.server");
 
     const cfg = razorpayConfig();
-    if (!cfg) throw new Error("Razorpay Test Mode is not configured.");
+    if (!cfg) throw new Error("Razorpay is not configured.");
 
     if (!verifyCheckoutSignature(cfg, data.orderId, data.paymentId, data.signature)) {
       console.error("confirmPayment: signature mismatch", data.orderId);
@@ -81,14 +108,50 @@ export const confirmPayment = createServerFn({ method: "POST" })
     const callId = order.notes?.["call_id"];
     if (!callId) throw new Error("Payment verified, but the call could not be identified.");
 
-    const { mockCalls } = await import("./mock-calls");
-    const call = mockCalls.find((item) => item.id === callId);
-    if (!call) throw new Error("Payment verified, but the call is unavailable.");
+    const { adminClient } = await import("./calls.server");
+    const db = await adminClient();
+
+    const { data: purchase, error: purchaseLookupError } = await db
+      .from("purchases")
+      .select("id, call_id, amount, status, access_token")
+      .eq("razorpay_order_id", data.orderId)
+      .maybeSingle();
+
+    if (purchaseLookupError) {
+      console.error("confirmPayment: purchase lookup failed", purchaseLookupError);
+      throw new Error("Payment was verified, but the purchase record could not be found.");
+    }
+
+    if (!purchase) {
+      throw new Error("Payment was verified, but the purchase record could not be found.");
+    }
+
+    if (String(purchase.call_id) !== String(callId)) {
+      throw new Error("Payment was verified for a different call.");
+    }
+
+    const { data: updated, error: updateError } = await db
+      .from("purchases")
+      .update({
+        status: "paid",
+        razorpay_payment_id: data.paymentId,
+        paid_at: new Date().toISOString(),
+      })
+      .eq("id", purchase.id)
+      .neq("status", "paid")
+      .select("access_token")
+      .maybeSingle();
+
+    if (updateError) {
+      console.error("confirmPayment: purchase update failed", updateError);
+      throw new Error("Payment was verified, but access could not be activated.");
+    }
 
     return {
-      callId,
+      callId: String(callId),
       paymentId: data.paymentId,
       orderId: data.orderId,
+      accessToken: String(updated?.access_token ?? purchase.access_token),
     };
   });
 
@@ -96,5 +159,5 @@ export const confirmPayment = createServerFn({ method: "POST" })
 export const confirmTestPayment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ orderId: z.string().min(6) }).parse(input))
   .handler(async () => {
-    throw new Error("Demo payments are disabled. Use Razorpay Test Mode instead.");
+    throw new Error("Demo payments are disabled. Use Razorpay Checkout.");
   });

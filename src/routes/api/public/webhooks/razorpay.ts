@@ -33,8 +33,8 @@ export const Route = createFileRoute("/api/public/webhooks/razorpay")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        if (payload.event === "payment.captured" || payload.event === "order.paid") {
-          await supabaseAdmin
+        if (payload.event === "payment.captured") {
+          const { error } = await supabaseAdmin
             .from("purchases")
             .update({
               status: "paid",
@@ -45,12 +45,22 @@ export const Route = createFileRoute("/api/public/webhooks/razorpay")({
             })
             .eq("razorpay_order_id", orderId)
             .neq("status", "paid");
+
+          if (error) {
+            console.error("Razorpay webhook: purchase update failed", error);
+            return new Response("Database update failed", { status: 500 });
+          }
         } else if (payload.event === "payment.failed") {
-          await supabaseAdmin
+          const { error } = await supabaseAdmin
             .from("purchases")
             .update({ status: "failed" })
             .eq("razorpay_order_id", orderId)
             .eq("status", "created");
+
+          if (error) {
+            console.error("Razorpay webhook: failed-payment update failed", error);
+            return new Response("Database update failed", { status: 500 });
+          }
         }
 
         return new Response("ok");

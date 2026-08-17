@@ -88,7 +88,7 @@ function Checkout() {
     setError(null);
 
     try {
-      const order = await startPurchase({ data: { callId: call.id, price: call.price } });
+      const order = await startPurchase({ data: { callId: call.id } });
       if (!(window as typeof window & { Razorpay?: any }).Razorpay) {
         throw new Error("Razorpay Checkout could not be loaded. Check your internet connection and try again.");
       }
@@ -115,7 +115,7 @@ function Checkout() {
               },
             });
             if (verified.callId !== call.id) throw new Error("Payment was verified for a different call.");
-            unlock(call.id);
+            unlock(call.id, verified.accessToken);
             setState("done");
             setTimeout(() => navigate({ to: "/call/$callId", params: { callId: call.id } }), 700);
           } catch (err) {
