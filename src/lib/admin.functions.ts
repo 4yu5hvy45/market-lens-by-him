@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { callInputSchema } from "./call-schema";
+import { callDraftSchema, callInputSchema, publishBlockers } from "./call-schema";
 import type { FullCall } from "./types";
 
 const callId = z.object({ callId: z.string().uuid() });
@@ -39,7 +39,7 @@ export const adminGetCall = createServerFn({ method: "POST" })
 export const adminSaveCall = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
-      .object({ id: z.string().uuid().optional(), values: callInputSchema })
+      .object({ id: z.string().uuid().optional(), values: callDraftSchema })
       .parse(input),
   )
   .handler(async ({ data }) => {
@@ -48,7 +48,15 @@ export const adminSaveCall = createServerFn({ method: "POST" })
     const { toRow } = await import("./admin-guard.server");
     const { adminClient } = await import("./calls.server");
     const db = await adminClient();
-    const row = toRow(data.values);
+
+    // Drafts may be incomplete. Any non-draft save must pass the strict
+    // publish schema so a live/closed/archived call can never be corrupted
+    // with empty trade levels or research.
+    const values =
+      data.values.state === "draft"
+        ? data.values
+        : callInputSchema.parse(data.values);
+    const row = toRow(values);
 
     if (data.id) {
       const { data: updated, error } = await db
@@ -90,13 +98,39 @@ export const adminPublishCall = createServerFn({ method: "POST" })
     if (!call) throw new Error("Call not found.");
     if (call.state !== "draft") throw new Error("Only a draft call can be published. Create a new draft for a new call.");
 
-    const blockers: string[] = [];
-    if (!Array.isArray(call.research) || call.research.length === 0) {
-      blockers.push("Add at least one research block before publishing.");
+    const candidate = callInputSchema.safeParse({
+      callNumber: call.call_number,
+      state: "live",
+      price: call.price_inr,
+      stock: call.stock_name ?? "",
+      ticker: call.ticker ?? "",
+      exchange: call.exchange ?? "NSE / BSE",
+      sector: call.sector ?? "",
+      direction: call.direction ?? "long",
+      entry: call.entry ?? 0,
+      target: call.target ?? 0,
+      stopLoss: call.stop_loss ?? 0,
+      currentPrice: call.current_price ?? call.entry ?? 0,
+      term: call.term ?? "Swing",
+      coverage: call.coverage ?? "Weekly Pick",
+      segment: call.segment ?? "Cash / Equity",
+      timeframe: call.timeframe ?? "",
+      changePct: call.change_pct ?? 0,
+      confidence: call.confidence ?? 70,
+      summary: call.summary ?? "",
+      view: call.view_text ?? "",
+      research: Array.isArray(call.research) ? call.research : [],
+      catalysts: Array.isArray(call.catalysts) ? call.catalysts : [],
+      series: call.series ?? [],
+      chartImage: call.chart_image ?? undefined,
+      checkoutHeadline: "",
+      checkoutSubtext: "",
+    });
+    if (!candidate.success) {
+      const messages = candidate.error.issues.map((issue) => issue.message);
+      throw new Error(messages.join(" "));
     }
-    if (Number(call.price_inr) <= 0) blockers.push("A live call needs a price above 0.");
-    if (!call.summary) blockers.push("Add a short summary before publishing.");
-    if (!call.view_text) blockers.push("Add the desk view before publishing.");
+    const blockers = publishBlockers(candidate.data);
     if (blockers.length) throw new Error(blockers.join(" "));
 
     const { error } = await db
@@ -171,11 +205,38 @@ export const adminRelistCall = createServerFn({ method: "POST" })
     if (!["closed", "archived", "draft"].includes(String(call.state))) {
       throw new Error("Only a closed, archived or draft call can be re-listed.");
     }
-    const blockers: string[] = [];
-    if (!Array.isArray(call.research) || call.research.length === 0) blockers.push("Add at least one research block before publishing.");
-    if (Number(call.price_inr) <= 0) blockers.push("A live call needs a price above 0.");
-    if (!call.summary) blockers.push("Add a short summary before publishing.");
-    if (!call.view_text) blockers.push("Add the desk view before publishing.");
+    const candidate = callInputSchema.safeParse({
+      callNumber: call.call_number,
+      state: "live",
+      price: call.price_inr,
+      stock: call.stock_name ?? "",
+      ticker: call.ticker ?? "",
+      exchange: call.exchange ?? "NSE / BSE",
+      sector: call.sector ?? "",
+      direction: call.direction ?? "long",
+      entry: call.entry ?? 0,
+      target: call.target ?? 0,
+      stopLoss: call.stop_loss ?? 0,
+      currentPrice: call.current_price ?? call.entry ?? 0,
+      term: call.term ?? "Swing",
+      coverage: call.coverage ?? "Weekly Pick",
+      segment: call.segment ?? "Cash / Equity",
+      timeframe: call.timeframe ?? "",
+      changePct: call.change_pct ?? 0,
+      confidence: call.confidence ?? 70,
+      summary: call.summary ?? "",
+      view: call.view_text ?? "",
+      research: Array.isArray(call.research) ? call.research : [],
+      catalysts: Array.isArray(call.catalysts) ? call.catalysts : [],
+      series: call.series ?? [],
+      chartImage: call.chart_image ?? undefined,
+      checkoutHeadline: "",
+      checkoutSubtext: "",
+    });
+    if (!candidate.success) {
+      throw new Error(candidate.error.issues.map((issue) => issue.message).join(" "));
+    }
+    const blockers = publishBlockers(candidate.data);
     if (blockers.length) throw new Error(blockers.join(" "));
 
     const { error } = await db.from("calls")

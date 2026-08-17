@@ -28,7 +28,7 @@ export const Route = createFileRoute("/admin/editor/$callId")({
 });
 
 const terms: Term[] = ["Short Term", "Swing", "Positional", "Long Term"];
-const slots = ["1", "2", "3"];
+const slots = Array.from({ length: 10 }, (_, i) => String(i + 1));
 
 const blank = (): StockCall => ({
   id: `ml-${Math.floor(Math.random() * 9000 + 1000)}`,
@@ -38,7 +38,7 @@ const blank = (): StockCall => ({
   exchange: "NSE / BSE",
   sector: "",
   direction: "long",
-  status: "live",
+  status: "draft",
   access: "paid",
   price: 499,
   currentPrice: 0,
@@ -61,18 +61,26 @@ const blank = (): StockCall => ({
   checkoutSubtext: "",
 });
 
-const DEFAULT_CHECKOUT_HEADLINE = "This setup is live. The levels are still sealed.";
-const DEFAULT_CHECKOUT_SUBTEXT =
-  "Every Market Lens call is written by the desk before the move, not explained after it. " +
-  "While a call is live we publish only what you can judge us on — the potential left on the table. " +
-  "The company, the entry band and the risk line stay behind this one-time unlock so the trade isn't crowded out.";
 
 function CallEditor() {
   const { callId } = useParams({ from: "/admin/editor/$callId" });
   const { getCall, createCall, updateCall, calls, refreshAdmin } = useCalls();
   const navigate = useNavigate();
   const existing = callId === "new" ? undefined : getCall(callId);
-  const [form, setForm] = useState<StockCall>(existing ?? blank());
+  const firstAvailableSlot = () => {
+    const liveSlots = new Set(
+      calls.filter((c) => c.status === "live").map((c) => c.callNumber),
+    );
+    const available = slots.find((slot) => !liveSlots.has(Number(slot)));
+    return available ? Number(available) : 1;
+  };
+
+  const [form, setForm] = useState<StockCall>(() => {
+    if (existing) return existing;
+    const draft = blank();
+    draft.callNumber = firstAvailableSlot();
+    return draft;
+  });
   const fileRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,8 +93,15 @@ function CallEditor() {
   }, [refreshAdmin]);
 
   useEffect(() => {
-    if (existing) setForm(existing);
-  }, [existing?.id]);
+    if (existing) {
+      setForm(existing);
+      return;
+    }
+    // Once the admin list has loaded, choose the first free live slot for a new draft.
+    const liveSlots = new Set(calls.filter((c) => c.status === "live").map((c) => c.callNumber));
+    const available = slots.find((slot) => !liveSlots.has(Number(slot)));
+    if (available) setForm((current) => ({ ...current, callNumber: Number(available) }));
+  }, [existing?.id, calls]);
 
   const slotTaken = calls.find(
     (c) => c.status === "live" && c.callNumber === form.callNumber && c.id !== form.id,
@@ -160,8 +175,8 @@ function CallEditor() {
           <Num label="Unlock price (₹)" value={form.price} onChange={(v) => set("price", v)} />
           {slotTaken && (
             <p className="sm:col-span-2 text-[11px] font-medium text-bear">
-              Slot {form.callNumber} is currently used by “{slotTaken.stock}”. Saving will show two
-              calls with the same number.
+              Slot {form.callNumber} is currently occupied by “{slotTaken.stock}”. Drafts may share a
+              slot, but only one live call can occupy it at a time.
             </p>
           )}
         </Card>
@@ -260,25 +275,6 @@ function CallEditor() {
           )}
         </Card>
 
-        <Card title="Checkout page copy" full>
-          <Field
-            label="Checkout headline"
-            value={form.checkoutHeadline ?? ""}
-            onChange={(v) => set("checkoutHeadline", v)}
-          />
-          <Area
-            label="Checkout subtext"
-            value={form.checkoutSubtext ?? ""}
-            onChange={(v) => set("checkoutSubtext", v)}
-            rows={4}
-          />
-          <p className="text-[11px] text-muted-foreground">
-            Shown on this call's unlock/checkout page. Leave blank to use the default placeholder
-            below — it never mentions the call number.
-            <br />
-            Default headline: <span className="italic">“{DEFAULT_CHECKOUT_HEADLINE}”</span>
-          </p>
-        </Card>
 
         <Card title="Narrative" full>
           <Area
@@ -329,7 +325,7 @@ function CallEditor() {
           className="btn-blue sheen flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.16em] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Save className="h-4 w-4" />
-          {saving ? "Saving…" : existing ? "Save changes" : `Publish as call no. ${form.callNumber}`}
+          {saving ? "Saving…" : existing ? "Save changes" : "Save draft"}
         </button>
       </div>
       </div>

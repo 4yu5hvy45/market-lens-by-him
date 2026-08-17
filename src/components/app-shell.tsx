@@ -82,6 +82,12 @@ export function AppShell({ children, hero }: { children: ReactNode; hero?: React
                   <Phone className="h-3.5 w-3.5" />
                   <span className="num">+91 89592 27202</span>
                 </a>
+                <a
+                  href="mailto:marketlensbyhim@gmail.com"
+                  className="inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-white/90 transition-colors hover:border-white/30"
+                >
+                  marketlensbyhim@gmail.com
+                </a>
               </div>
             </div>
           </div>

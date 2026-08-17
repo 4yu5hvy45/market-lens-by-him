@@ -47,7 +47,7 @@ function AdminDashboard() {
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-extrabold md:text-4xl">Admin desk</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Three live slots (1-3). Publish live + paid; close a call to open it free for everyone.
+            Up to 10 live desk slots. Save research as drafts, publish when ready, and close calls to make them public.
           </p>
         </div>
         <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:shrink-0">
@@ -222,10 +222,20 @@ function AdminDashboard() {
                   try { await archiveCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not archive the call."); } finally { setBusyId(null); }
                 }} />
               ) : (
-                <Action icon={Radio} label={busyId === c.id ? "Saving…" : "Relist"} onClick={async () => {
-                  setActionError(null); setBusyId(c.id);
-                  try { await publishCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not relist the call."); } finally { setBusyId(null); }
-                }} />
+                <Action
+                  icon={Radio}
+                  label={busyId === c.id ? "Saving…" : c.status === "draft" ? "Publish" : "Relist"}
+                  onClick={async () => {
+                    setActionError(null); setBusyId(c.id);
+                    try {
+                      await publishCall(c.id);
+                    } catch (err) {
+                      setActionError(err instanceof Error ? err.message : "Could not publish the call.");
+                    } finally {
+                      setBusyId(null);
+                    }
+                  }}
+                />
               )}
               <Link
                 to="/call/$callId"

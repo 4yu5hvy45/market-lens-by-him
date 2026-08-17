@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Market Lens by HIM — Premium Equity Calls" },
       {
         property: "og:description",
-        content: "Three live premium setups from the desk, with a transparent closed-trade record.",
+        content: "Up to 10 live premium setups from the desk, with a transparent closed-trade record.",
       },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://marketlensbyhim.com/og-image.png" },
@@ -41,8 +41,7 @@ function LiveCalls() {
     () =>
       calls
         .filter((c) => c.status === "live")
-        .sort((a, b) => a.callNumber - b.callNumber)
-        .slice(0, 3),
+        .sort((a, b) => a.callNumber - b.callNumber),
     [calls],
   );
   const closed = useMemo(
@@ -86,7 +85,7 @@ function LiveCalls() {
             <div className="mt-5 flex flex-col gap-4">
               <HeroStat label="Hit rate" value={`${hit}%`} />
               <HeroStat label="Avg return" value={fmtPct(avg)} />
-              <HeroStat label="Live slots" value={`${live.length} / 3`} />
+              <HeroStat label="Live slots" value={`${live.length} / 10`} />
             </div>
           </div>
         </div>
@@ -100,7 +99,7 @@ function LiveCalls() {
             </div>
             <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight">Live Calls</h2>
             <p className="mt-1 text-xs font-light text-muted-foreground">
-              Slots 01 – 03 · locked while the position is active
+              Slots 01 – 10 · locked while the position is active
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
