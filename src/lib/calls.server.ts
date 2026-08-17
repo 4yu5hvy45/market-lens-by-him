@@ -93,6 +93,12 @@ export function mapFull(row: Row): FullCall {
   const target = Number(row["target"]);
   const stopLoss = Number(row["stop_loss"]);
   const sign = direction === "short" ? -1 : 1;
+  const calculatedPotential = Number((((target - entry) / entry) * 100 * sign).toFixed(2));
+  const rawOverride = row["potential_pct_override"];
+  const potentialOverride =
+    rawOverride === null || rawOverride === undefined || rawOverride === ""
+      ? undefined
+      : Number(rawOverride);
   return {
     id: String(row["id"]),
     callNumber: Number(row["call_number"]),
@@ -108,7 +114,13 @@ export function mapFull(row: Row): FullCall {
     series: normalizeSeries(row["series"]),
     publishedAt: (row["published_at"] as string | null) ?? null,
     closedAt: (row["closed_at"] as string | null) ?? null,
-    potentialPct: Number((((target - entry) / entry) * 100 * sign).toFixed(2)),
+    potentialPct:
+      potentialOverride !== undefined && Number.isFinite(potentialOverride)
+        ? potentialOverride
+        : calculatedPotential,
+    ...(potentialOverride !== undefined && Number.isFinite(potentialOverride)
+      ? { potentialPctOverride: potentialOverride }
+      : {}),
     riskPct: Number((Math.abs((entry - stopLoss) / entry) * 100).toFixed(2)),
     locked: false,
     stock: String(row["stock_name"] ?? ""),

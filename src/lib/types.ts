@@ -23,6 +23,8 @@ export interface PublicCall {
   publishedAt: string | null;
   closedAt: string | null;
   potentialPct: number;
+  /** Optional admin-set display override for Potential left. */
+  potentialPctOverride?: number;
   riskPct: number;
   /** True while the paid fields below are withheld by the server. */
   locked: boolean;
@@ -118,6 +120,8 @@ export interface StockCall {
   catalysts: string[];
   series: number[];
   confidence: number;
+  /** Optional admin override for the public "Potential left" value. */
+  potentialPctOverride?: number;
   checkoutHeadline?: string;
   checkoutSubtext?: string;
 }
