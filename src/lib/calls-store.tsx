@@ -32,7 +32,7 @@ interface CallsContextValue {
   archiveCall: (id: string) => Promise<void>;
   publishCall: (id: string) => Promise<void>;
   duplicateCall: (id: string) => Promise<{ id: string; callNumber: number }>;
-  unlock: (id: string, accessToken?: string) => void;
+  unlock: (id: string, accessToken?: string) => Promise<FullCall | PublicCall | null>;
   unlocked: string[];
 }
 
@@ -213,12 +213,16 @@ export function CallsProvider({ children }: { children: ReactNode }) {
     return result;
   }, [duplicate, refreshAdmin]);
 
-  const unlock = useCallback((id: string, accessToken?: string) => {
+  const unlock = useCallback(async (id: string, accessToken?: string) => {
+    // Do not mark the call unlocked or navigate until the server has returned
+    // the paid sheet. Passing the verified token directly avoids a race between
+    // the payment response, the customer session cookie, and the call fetch.
+    const full = await fetchContent({ data: { callId: id, accessToken } });
+    if (!full) throw new Error("Payment was verified, but the full call could not be loaded. Please try opening the call again.");
+    setCalls((prev) => prev.map((c) => c.id === id ? toStockCall(full) : c));
     const next = unlocked.includes(id) ? unlocked : [...unlocked, id];
     persistUnlock(next);
-    void fetchContent({ data: { callId: id } }).then((full) => {
-      if (full) setCalls((prev) => prev.map((c) => c.id === id ? toStockCall(full) : c));
-    }).catch((err) => console.error("unlock call", err));
+    return full;
   }, [fetchContent, persistUnlock, unlocked]);
 
   const value = useMemo(() => ({

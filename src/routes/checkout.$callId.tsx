@@ -115,9 +115,12 @@ function Checkout() {
               },
             });
             if (verified.callId !== call.id) throw new Error("Payment was verified for a different call.");
-            unlock(call.id, verified.accessToken);
+            // Wait for the verified paid sheet to load before navigating.
+            // This prevents the customer from briefly (or incorrectly) seeing
+            // the locked teaser after a successful payment.
+            await unlock(call.id, verified.accessToken);
             setState("done");
-            setTimeout(() => navigate({ to: "/call/$callId", params: { callId: call.id } }), 700);
+            await navigate({ to: "/call/$callId", params: { callId: call.id } });
           } catch (err) {
             setState("idle");
             setError(err instanceof Error ? err.message : "Payment verification failed.");
