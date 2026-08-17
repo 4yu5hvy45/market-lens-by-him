@@ -120,17 +120,29 @@ export interface StockCall {
   catalysts: string[];
   series: number[];
   confidence: number;
+  /** Safe display metrics for locked live calls; never contain paid price levels. */
+  potentialPctDisplay?: number;
+  riskPctDisplay?: number;
   /** Optional admin override for the public "Potential left" value. */
   potentialPctOverride?: number;
   checkoutHeadline?: string;
   checkoutSubtext?: string;
 }
 
-export const potentialPct = (c: StockCall) =>
-  c.entry > 0 ? ((c.target - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1) : 0;
+export const potentialPct = (c: StockCall) => {
+  if (c.potentialPctOverride !== undefined && Number.isFinite(c.potentialPctOverride)) {
+    return c.potentialPctOverride;
+  }
+  if (c.entry <= 0 && c.potentialPctDisplay !== undefined) return c.potentialPctDisplay;
+  return c.entry > 0
+    ? ((c.target - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1)
+    : 0;
+};
 
-export const riskPct = (c: StockCall) =>
-  c.entry > 0 ? Math.abs((c.entry - c.stopLoss) / c.entry) * 100 : 0;
+export const riskPct = (c: StockCall) => {
+  if (c.entry <= 0 && c.riskPctDisplay !== undefined) return c.riskPctDisplay;
+  return c.entry > 0 ? Math.abs((c.entry - c.stopLoss) / c.entry) * 100 : 0;
+};
 
 export const livePnlPct = (c: StockCall) =>
   c.entry > 0 && Number.isFinite(c.currentPrice)

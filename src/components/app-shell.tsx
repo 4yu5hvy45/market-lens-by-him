@@ -7,7 +7,7 @@ import { MarketTicker } from "./market-ticker";
 export function AppShell({ children, hero }: { children: ReactNode; hero?: ReactNode }) {
   return (
     <div className="min-h-screen">
-      <div className="hero-navy">
+      <div className="hero-navy print:hidden">
 
 
         <div className="app-header relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 md:gap-4 md:px-8 md:py-5">
@@ -43,11 +43,11 @@ export function AppShell({ children, hero }: { children: ReactNode; hero?: React
         )}
       </div>
 
-      <MarketTicker />
+      <div className="print:hidden"><MarketTicker /></div>
 
       <main className="mx-auto max-w-6xl min-w-0 overflow-x-clip px-4 pb-20 pt-8 md:px-8 md:pt-12">{children}</main>
 
-      <footer className="footer-navy mt-24">
+      <footer className="footer-navy mt-24 print:hidden">
         <div className="mx-auto max-w-6xl px-4 py-14 md:px-8">
           <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_auto]">
             <div>

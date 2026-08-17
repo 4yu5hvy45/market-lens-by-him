@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ImageUp, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, FileText, ImageUp, Save, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { ResearchNote } from "@/components/research-note";
+import { CallPdfDocument } from "@/components/call-pdf-document";
 import { AdminGate } from "@/components/admin-gate";
 import { useCalls } from "@/lib/calls-store";
 import type { StockCall, Term } from "@/lib/types";
@@ -63,6 +65,10 @@ const blank = (): StockCall => ({
 });
 
 
+function previewCall(call: StockCall): StockCall {
+  return call.status === "draft" ? { ...call, status: "live", access: "paid" } : call;
+}
+
 function CallEditor() {
   const { callId } = useParams({ from: "/admin/editor/$callId" });
   const { getCall, createCall, updateCall, calls, refreshAdmin } = useCalls();
@@ -85,6 +91,7 @@ function CallEditor() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<"web" | "pdf">("web");
 
   const set = <K extends keyof StockCall>(k: K, v: StockCall[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -153,7 +160,8 @@ function CallEditor() {
         </p>
       )}
 
-      <div className="mt-6 space-y-4 pb-10">
+      <div className="mt-6 grid gap-6 pb-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(520px,1.1fr)] lg:items-start">
+        <div className="min-w-0 space-y-4">
         <Card title="Desk slot & access">
           <Select
             label="Call number (desk slot)"
@@ -214,12 +222,22 @@ function CallEditor() {
           <Num label="Entry level" value={form.entry} placeholder="e.g. 680" onChange={(v) => set("entry", v)} />
           <Num label="Target level" value={form.target} placeholder="e.g. 780" onChange={(v) => set("target", v)} />
           <Num label="Stop loss" value={form.stopLoss} placeholder="e.g. 640" onChange={(v) => set("stopLoss", v)} />
-          <Num
-            label="Potential left override (%)"
-            value={form.potentialPctOverride ?? 0}
-            placeholder="Leave blank to calculate from target"
-            onChange={(v) => set("potentialPctOverride", v > 0 ? v : undefined)}
-          />
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              Potential left override (%)
+            </span>
+            <input
+              inputMode="decimal"
+              type="number"
+              className={`${inputClass} num text-base font-semibold`}
+              value={form.potentialPctOverride ?? ""}
+              placeholder="Auto-calculate"
+              onChange={(e) => {
+                const raw = e.target.value;
+                set("potentialPctOverride", raw === "" ? undefined : Number(raw));
+              }}
+            />
+          </label>
           <Select
             label="Term"
             value={form.term}
@@ -339,6 +357,57 @@ function CallEditor() {
           <Save className="h-4 w-4" />
           {saving ? "Saving…" : existing ? "Save changes" : "Save draft"}
         </button>
+        </div>
+
+        <aside className="min-w-0 lg:sticky lg:top-5">
+          <div className="glass overflow-hidden rounded-3xl">
+            <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Live editor preview</div>
+                <div className="mt-1 text-xs text-muted-foreground">What the visitor will see after publishing</div>
+              </div>
+              <div className="flex rounded-xl border border-border bg-surface-2 p-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode("web")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] ${previewMode === "web" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                >
+                  <Eye className="h-3.5 w-3.5" /> Web
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode("pdf")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] ${previewMode === "pdf" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                >
+                  <FileText className="h-3.5 w-3.5" /> PDF
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[calc(100vh-8rem)] overflow-auto bg-surface-2 p-3 md:p-4">
+              {previewMode === "web" ? (
+                <div className="space-y-4">
+                  <ResearchNote call={previewCall(form)} />
+                  {form.research.length > 0 && (
+                    <section className="glass rounded-3xl p-6">
+                      <h2 className="font-display text-xl font-extrabold text-navy">Detailed Research</h2>
+                      <div className="mt-4 space-y-5">
+                        {form.research.map((r, index) => (
+                          <div key={`${r.heading}-${index}`}>
+                            <h3 className="text-sm font-bold text-primary">{r.heading}</h3>
+                            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{r.body}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              ) : (
+                <div className="pdf-preview-sheet"><CallPdfDocument call={form} /></div>
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
       </div>
     </AppShell>

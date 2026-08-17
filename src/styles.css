@@ -465,13 +465,82 @@
 }
 
 @media print {
-  .no-print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print,
+  .screen-call-sheet {
     display: none !important;
   }
-  body {
+
+  .print-only-pdf {
+    display: block !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .pdf-document {
+    width: 210mm;
+    margin: 0 auto;
     background: #fff;
+    color: #101a31;
+  }
+
+  .pdf-document .glass,
+  .pdf-document .pdf-research {
+    background: #fff !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .pdf-document img {
+    break-inside: avoid;
+  }
+
+  .pdf-break-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
+
+.print-only-pdf {
+  display: none;
+}
+
+.pdf-preview-sheet {
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 0 18px 50px -28px oklch(0.15 0.04 260 / 0.45);
+}
+
+.pdf-document {
+  width: 100%;
+}
+
+.pdf-break-avoid {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
 
 @layer components {
   /* Shared admin form control */

@@ -32,7 +32,7 @@ interface CallsContextValue {
   archiveCall: (id: string) => Promise<void>;
   publishCall: (id: string) => Promise<void>;
   duplicateCall: (id: string) => Promise<{ id: string; callNumber: number }>;
-  unlock: (id: string) => void;
+  unlock: (id: string, accessToken?: string) => void;
   unlocked: string[];
 }
 
@@ -70,6 +70,8 @@ function toStockCall(c: PublicCall): StockCall {
     catalysts: c.catalysts ?? [],
     series: normalizeSeries(c.series),
     confidence: c.confidence,
+    potentialPctDisplay: c.potentialPct,
+    riskPctDisplay: c.riskPct,
     potentialPctOverride: c.potentialPctOverride,
     checkoutHeadline: c.checkoutHeadline,
     checkoutSubtext: c.checkoutSubtext,
@@ -211,7 +213,7 @@ export function CallsProvider({ children }: { children: ReactNode }) {
     return result;
   }, [duplicate, refreshAdmin]);
 
-  const unlock = useCallback((id: string) => {
+  const unlock = useCallback((id: string, accessToken?: string) => {
     const next = unlocked.includes(id) ? unlocked : [...unlocked, id];
     persistUnlock(next);
     void fetchContent({ data: { callId: id } }).then((full) => {

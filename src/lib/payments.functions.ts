@@ -109,6 +109,7 @@ export const confirmPayment = createServerFn({ method: "POST" })
     if (!callId) throw new Error("Payment verified, but the call could not be identified.");
 
     const { adminClient } = await import("./calls.server");
+    const { grantCallAccess } = await import("./customer-session.server");
     const db = await adminClient();
 
     const { data: purchase, error: purchaseLookupError } = await db
@@ -147,11 +148,14 @@ export const confirmPayment = createServerFn({ method: "POST" })
       throw new Error("Payment was verified, but access could not be activated.");
     }
 
+    const accessToken = String(updated?.access_token ?? purchase.access_token);
+    await grantCallAccess(String(callId), accessToken);
+
     return {
       callId: String(callId),
       paymentId: data.paymentId,
       orderId: data.orderId,
-      accessToken: String(updated?.access_token ?? purchase.access_token),
+      accessToken,
     };
   });
 

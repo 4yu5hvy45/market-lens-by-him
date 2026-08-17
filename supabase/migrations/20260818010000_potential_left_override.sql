@@ -36,3 +36,5 @@ WHERE c.state IN ('live', 'closed', 'archived');
 
 GRANT SELECT ON public.calls_public TO anon, authenticated, service_role;
 REVOKE INSERT, UPDATE, DELETE ON public.calls_public FROM anon, authenticated;
+
+NOTIFY pgrst, 'reload schema';

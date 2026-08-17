@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Check, Download, Lock } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ResearchNote } from "@/components/research-note";
+import { CallPdfDocument } from "@/components/call-pdf-document";
 import { useCalls } from "@/lib/calls-store";
 import { potentialPct, type StockCall } from "@/lib/types";
 import { fmtPct } from "@/lib/format";
@@ -70,21 +71,27 @@ function CallDetail() {
         </div>
       </div>
 
-      <ResearchNote call={call} />
+      <div className="screen-call-sheet">
+        <ResearchNote call={call} />
 
-      {call.research.length > 0 && (
-        <section className="glass mt-4 rounded-3xl p-6 md:p-8">
-          <h2 className="font-display text-xl font-extrabold text-navy">Detailed Research</h2>
-          <div className="mt-4 space-y-5">
-            {call.research.map((r) => (
-              <div key={r.heading}>
-                <h3 className="text-sm font-bold text-primary">{r.heading}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{r.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+        {call.research.length > 0 && (
+          <section className="glass mt-4 rounded-3xl p-6 md:p-8">
+            <h2 className="font-display text-xl font-extrabold text-navy">Detailed Research</h2>
+            <div className="mt-4 space-y-5">
+              {call.research.map((r, index) => (
+                <div key={`${r.heading}-${index}`}>
+                  <h3 className="text-sm font-bold text-primary">{r.heading}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{r.body}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      <div className="print-only-pdf">
+        <CallPdfDocument call={call} />
+      </div>
     </AppShell>
   );
 }

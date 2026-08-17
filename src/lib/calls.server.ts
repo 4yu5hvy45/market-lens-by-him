@@ -43,12 +43,30 @@ export function mapPublic(row: Row): PublicCall {
   // Live calls are intentionally locked. The base table contains the real entry/target
   // values, so locking cannot depend on a NULL projection value when we read the base table.
   const locked = state === "live";
+  const rawPotentialOverride = row["potential_pct_override"];
+  const potentialOverride =
+    rawPotentialOverride === null || rawPotentialOverride === undefined || rawPotentialOverride === ""
+      ? undefined
+      : Number(rawPotentialOverride);
+  const entry = Number(row["entry"] ?? 0);
+  const target = Number(row["target"] ?? 0);
+  const direction = row["direction"] as PublicCall["direction"];
+  const calculatedPotential =
+    entry > 0 ? ((target - entry) / entry) * 100 * (direction === "short" ? -1 : 1) : 0;
+  const stopLoss = Number(row["stop_loss"] ?? 0);
+  const calculatedRisk =
+    entry > 0 && stopLoss > 0 ? Math.abs((entry - stopLoss) / entry) * 100 : 0;
+  const publicPotential =
+    potentialOverride !== undefined && Number.isFinite(potentialOverride)
+      ? potentialOverride
+      : Number(calculatedPotential.toFixed(2));
+  const publicRisk = Number(calculatedRisk.toFixed(2));
   return {
     id: String(row["id"]),
     callNumber: Number(row["call_number"]),
     state,
     price: Number(row["price_inr"]),
-    direction: row["direction"] as PublicCall["direction"],
+    direction,
     sector: String(row["sector"] ?? ""),
     term: String(row["term"] ?? ""),
     coverage: String(row["coverage"] ?? ""),
@@ -58,8 +76,11 @@ export function mapPublic(row: Row): PublicCall {
     series: normalizeSeries(row["series"]),
     publishedAt: (row["published_at"] as string | null) ?? null,
     closedAt: (row["closed_at"] as string | null) ?? null,
-    potentialPct: Number(row["potential_pct"] ?? 0),
-    riskPct: Number(row["risk_pct"] ?? 0),
+    potentialPct: publicPotential,
+    ...(potentialOverride !== undefined && Number.isFinite(potentialOverride)
+      ? { potentialPctOverride: potentialOverride }
+      : {}),
+    riskPct: publicRisk,
     locked,
     checkoutHeadline: String(row["checkout_headline"] ?? ""),
     checkoutSubtext: String(row["checkout_subtext"] ?? ""),
