@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { callDraftSchema, callInputSchema, publishBlockers } from "./call-schema";
+import { callDraftSchema, callPublishSchema } from "./call-schema";
 import type { FullCall } from "./types";
 
 const callId = z.object({ callId: z.string().uuid() });
@@ -49,13 +49,15 @@ export const adminSaveCall = createServerFn({ method: "POST" })
     const { adminClient } = await import("./calls.server");
     const db = await adminClient();
 
-    // Drafts may be incomplete. Any non-draft save must pass the strict
-    // publish schema so a live/closed/archived call can never be corrupted
-    // with empty trade levels or research.
-    const values =
-      data.values.state === "draft"
-        ? data.values
-        : callInputSchema.parse(data.values);
+    // Drafts are intentionally free-form. Published/non-draft calls only
+    // need the small set of fields required for the public/payment flow.
+    if (data.values.state === "live") {
+      const required = callPublishSchema.safeParse(data.values);
+      if (!required.success) {
+        throw new Error(required.error.issues.map((issue) => issue.message).join(" "));
+      }
+    }
+    const values = callDraftSchema.parse(data.values);
     const row = toRow(values);
 
     if (data.id) {
@@ -98,40 +100,19 @@ export const adminPublishCall = createServerFn({ method: "POST" })
     if (!call) throw new Error("Call not found.");
     if (call.state !== "draft") throw new Error("Only a draft call can be published. Create a new draft for a new call.");
 
-    const candidate = callInputSchema.safeParse({
+    const candidate = callPublishSchema.safeParse({
       callNumber: call.call_number,
       state: "live",
       price: call.price_inr,
       stock: call.stock_name ?? "",
       ticker: call.ticker ?? "",
-      exchange: call.exchange ?? "NSE / BSE",
-      sector: call.sector ?? "",
-      direction: call.direction ?? "long",
       entry: call.entry ?? 0,
       target: call.target ?? 0,
       stopLoss: call.stop_loss ?? 0,
-      currentPrice: call.current_price ?? call.entry ?? 0,
-      term: call.term ?? "Swing",
-      coverage: call.coverage ?? "Weekly Pick",
-      segment: call.segment ?? "Cash / Equity",
-      timeframe: call.timeframe ?? "",
-      changePct: call.change_pct ?? 0,
-      confidence: call.confidence ?? 70,
-      summary: call.summary ?? "",
-      view: call.view_text ?? "",
-      research: Array.isArray(call.research) ? call.research : [],
-      catalysts: Array.isArray(call.catalysts) ? call.catalysts : [],
-      series: call.series ?? [],
-      chartImage: call.chart_image ?? undefined,
-      checkoutHeadline: "",
-      checkoutSubtext: "",
     });
     if (!candidate.success) {
-      const messages = candidate.error.issues.map((issue) => issue.message);
-      throw new Error(messages.join(" "));
+      throw new Error(candidate.error.issues.map((issue) => issue.message).join(" "));
     }
-    const blockers = publishBlockers(candidate.data);
-    if (blockers.length) throw new Error(blockers.join(" "));
 
     const { error } = await db
       .from("calls")
@@ -146,6 +127,72 @@ export const adminPublishCall = createServerFn({ method: "POST" })
       );
     }
     return { ok: true };
+  });
+
+/** Duplicate a call into a fresh draft. Purchase history is never copied. */
+export const adminDuplicateCall = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => callId.parse(input))
+  .handler(async ({ data }) => {
+    const { requireAdminSession } = await import("./admin-session.server");
+    await requireAdminSession();
+    const { adminClient } = await import("./calls.server");
+    const db = await adminClient();
+
+    const { data: source, error: sourceError } = await db
+      .from("calls")
+      .select("*")
+      .eq("id", data.callId)
+      .maybeSingle();
+
+    if (sourceError) {
+      console.error("adminDuplicateCall source", sourceError);
+      throw new Error("Could not load the call to duplicate.");
+    }
+    if (!source) throw new Error("Call not found.");
+
+    const { data: liveRows, error: liveError } = await db
+      .from("calls")
+      .select("call_number")
+      .eq("state", "live");
+
+    if (liveError) {
+      console.error("adminDuplicateCall slots", liveError);
+      throw new Error("Could not check available desk slots.");
+    }
+
+    const liveSlots = new Set((liveRows ?? []).map((row) => Number(row.call_number)));
+    const availableSlot = Array.from({ length: 10 }, (_, i) => i + 1).find((slot) => !liveSlots.has(slot));
+    if (!availableSlot) throw new Error("All 10 live slots are occupied. Close a call before duplicating it.");
+
+    const {
+      id: _id,
+      created_at: _createdAt,
+      updated_at: _updatedAt,
+      published_at: _publishedAt,
+      closed_at: _closedAt,
+      exit_price: _exitPrice,
+      ...copy
+    } = source;
+
+    const { data: created, error } = await db
+      .from("calls")
+      .insert({
+        ...copy,
+        call_number: availableSlot,
+        state: "draft",
+        published_at: null,
+        closed_at: null,
+        exit_price: null,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("adminDuplicateCall insert", error);
+      throw new Error(`Could not duplicate call: ${error.message}`);
+    }
+
+    return { id: created.id as string, callNumber: availableSlot };
   });
 
 /** live → closed. Exit price is required; the outcome is derived, not typed in. */
@@ -205,39 +252,19 @@ export const adminRelistCall = createServerFn({ method: "POST" })
     if (!["closed", "archived", "draft"].includes(String(call.state))) {
       throw new Error("Only a closed, archived or draft call can be re-listed.");
     }
-    const candidate = callInputSchema.safeParse({
+    const candidate = callPublishSchema.safeParse({
       callNumber: call.call_number,
       state: "live",
       price: call.price_inr,
       stock: call.stock_name ?? "",
       ticker: call.ticker ?? "",
-      exchange: call.exchange ?? "NSE / BSE",
-      sector: call.sector ?? "",
-      direction: call.direction ?? "long",
       entry: call.entry ?? 0,
       target: call.target ?? 0,
       stopLoss: call.stop_loss ?? 0,
-      currentPrice: call.current_price ?? call.entry ?? 0,
-      term: call.term ?? "Swing",
-      coverage: call.coverage ?? "Weekly Pick",
-      segment: call.segment ?? "Cash / Equity",
-      timeframe: call.timeframe ?? "",
-      changePct: call.change_pct ?? 0,
-      confidence: call.confidence ?? 70,
-      summary: call.summary ?? "",
-      view: call.view_text ?? "",
-      research: Array.isArray(call.research) ? call.research : [],
-      catalysts: Array.isArray(call.catalysts) ? call.catalysts : [],
-      series: call.series ?? [],
-      chartImage: call.chart_image ?? undefined,
-      checkoutHeadline: "",
-      checkoutSubtext: "",
     });
     if (!candidate.success) {
       throw new Error(candidate.error.issues.map((issue) => issue.message).join(" "));
     }
-    const blockers = publishBlockers(candidate.data);
-    if (blockers.length) throw new Error(blockers.join(" "));
 
     const { error } = await db.from("calls")
       .update({ state: "live", price_inr: Number(call.price_inr), published_at: new Date().toISOString(), closed_at: null, exit_price: null })

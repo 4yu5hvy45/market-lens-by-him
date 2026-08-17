@@ -197,8 +197,8 @@ function CallEditor() {
         </Card>
 
         <Card title="Company">
-          <Field label="Company name" value={form.stock} onChange={(v) => set("stock", v)} />
-          <Field label="Ticker" value={form.ticker} onChange={(v) => set("ticker", v)} />
+          <Field label="Company name" value={form.stock} placeholder="e.g. Tata Motors" onChange={(v) => set("stock", v)} />
+          <Field label="Ticker" value={form.ticker} placeholder="e.g. TATAMOTORS" onChange={(v) => set("ticker", v)} />
           <Field label="Exchange" value={form.exchange} onChange={(v) => set("exchange", v)} />
           <Field label="Sector" value={form.sector} onChange={(v) => set("sector", v)} />
           <Num
@@ -210,9 +210,9 @@ function CallEditor() {
         </Card>
 
         <Card title="Levels">
-          <Num label="Entry level" value={form.entry} onChange={(v) => set("entry", v)} />
-          <Num label="Target level" value={form.target} onChange={(v) => set("target", v)} />
-          <Num label="Stop loss" value={form.stopLoss} onChange={(v) => set("stopLoss", v)} />
+          <Num label="Entry level" value={form.entry} placeholder="e.g. 680" onChange={(v) => set("entry", v)} />
+          <Num label="Target level" value={form.target} placeholder="e.g. 780" onChange={(v) => set("target", v)} />
+          <Num label="Stop loss" value={form.stopLoss} placeholder="e.g. 640" onChange={(v) => set("stopLoss", v)} />
           <Select
             label="Term"
             value={form.term}
@@ -280,9 +280,10 @@ function CallEditor() {
           <Area
             label="Summary (public teaser)"
             value={form.summary}
+            placeholder="e.g. Tata Motors is showing a constructive breakout setup with improving momentum."
             onChange={(v) => set("summary", v)}
           />
-          <Area label="Our view" value={form.view} onChange={(v) => set("view", v)} rows={6} />
+          <Area label="Our view" value={form.view} placeholder="Explain the setup, context and risk in plain language…" onChange={(v) => set("view", v)} rows={6} />
           <Field
             label="Catalysts (comma separated)"
             value={form.catalysts.join(", ")}
@@ -299,6 +300,7 @@ function CallEditor() {
           <Area
             label="Detailed research (locked while paid)"
             value={form.research.map((r) => `${r.heading} :: ${r.body}`).join("\n")}
+            placeholder="One research block per line, e.g. Technical Setup :: Price has reclaimed the key resistance zone with improving momentum."
             rows={6}
             onChange={(v) =>
               set(
@@ -359,17 +361,24 @@ function Field({
   label,
   value,
   onChange,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
         {label}
       </span>
-      <input className={inputClass} value={value} onChange={(e) => onChange(e.target.value)} />
+      <input
+        className={inputClass}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </label>
   );
 }
@@ -378,10 +387,12 @@ function Num({
   label,
   value,
   onChange,
+  placeholder,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
@@ -391,7 +402,8 @@ function Num({
       <input
         inputMode="decimal"
         className={`${inputClass} num text-base font-semibold`}
-        value={value}
+        value={value || ""}
+        placeholder={placeholder}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
       />
     </label>
@@ -403,11 +415,13 @@ function Area({
   value,
   onChange,
   rows = 3,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   rows?: number;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
@@ -418,6 +432,7 @@ function Area({
         rows={rows}
         className={`${inputClass} leading-relaxed`}
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
       />
     </label>

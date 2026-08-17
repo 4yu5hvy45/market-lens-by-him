@@ -17,6 +17,7 @@ import {
   adminRelistCall,
   adminCloseCall,
   adminArchiveCall,
+  adminDuplicateCall,
 } from "./admin.functions";
 import type { FullCall, PublicCall, StockCall } from "./types";
 import { normalizeSeries } from "./series";
@@ -30,6 +31,7 @@ interface CallsContextValue {
   closeCall: (id: string, exitPrice: number) => Promise<void>;
   archiveCall: (id: string) => Promise<void>;
   publishCall: (id: string) => Promise<void>;
+  duplicateCall: (id: string) => Promise<{ id: string; callNumber: number }>;
   unlock: (id: string) => void;
   unlocked: string[];
 }
@@ -123,6 +125,7 @@ export function CallsProvider({ children }: { children: ReactNode }) {
   const relist = useServerFn(adminRelistCall);
   const close = useServerFn(adminCloseCall);
   const archive = useServerFn(adminArchiveCall);
+  const duplicate = useServerFn(adminDuplicateCall);
 
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
@@ -200,6 +203,12 @@ export function CallsProvider({ children }: { children: ReactNode }) {
     await refreshAdmin();
   }, [publish, refreshAdmin]);
 
+  const duplicateCall = useCallback(async (id: string) => {
+    const result = await duplicate({ data: { callId: id } });
+    await refreshAdmin();
+    return result;
+  }, [duplicate, refreshAdmin]);
+
   const unlock = useCallback((id: string) => {
     const next = unlocked.includes(id) ? unlocked : [...unlocked, id];
     persistUnlock(next);
@@ -218,8 +227,9 @@ export function CallsProvider({ children }: { children: ReactNode }) {
     closeCall,
     archiveCall,
     publishCall,
+    duplicateCall,
     unlock,
-  }), [calls, unlocked, refreshAdmin, createCall, updateCall, closeCall, archiveCall, publishCall, unlock]);
+  }), [calls, unlocked, refreshAdmin, createCall, updateCall, closeCall, archiveCall, publishCall, duplicateCall, unlock]);
 
   return <CallsContext.Provider value={value}>{children}</CallsContext.Provider>;
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Archive, CheckCircle2, FileBarChart, LogOut, PencilLine, Plus, Radio } from "lucide-react";
+import { Archive, CheckCircle2, Copy, FileBarChart, LogOut, PencilLine, Plus, Radio } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AdminGate, adminSignOut } from "@/components/admin-gate";
 import { useCalls } from "@/lib/calls-store";
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
-  const { calls, refreshAdmin, closeCall, archiveCall, publishCall } = useCalls();
+  const { calls, refreshAdmin, closeCall, archiveCall, publishCall, duplicateCall } = useCalls();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -171,6 +171,22 @@ function AdminDashboard() {
                   }
                 />
                 <Action
+                  icon={Copy}
+                  label={busyId === `duplicate-${c.id}` ? "Duplicating…" : "Duplicate"}
+                  onClick={async () => {
+                    setActionError(null);
+                    setBusyId(`duplicate-${c.id}`);
+                    try {
+                      const result = await duplicateCall(c.id);
+                      navigate({ to: "/admin/editor/$callId", params: { callId: result.id } });
+                    } catch (err) {
+                      setActionError(err instanceof Error ? err.message : "Could not duplicate the call.");
+                    } finally {
+                      setBusyId(null);
+                    }
+                  }}
+                />
+                <Action
                   icon={CheckCircle2}
                   label="Close call"
                   primary
@@ -237,6 +253,22 @@ function AdminDashboard() {
                   }}
                 />
               )}
+              <Action
+                icon={Copy}
+                label={busyId === `duplicate-${c.id}` ? "Duplicating…" : "Duplicate"}
+                onClick={async () => {
+                  setActionError(null);
+                  setBusyId(`duplicate-${c.id}`);
+                  try {
+                    const result = await duplicateCall(c.id);
+                    navigate({ to: "/admin/editor/$callId", params: { callId: result.id } });
+                  } catch (err) {
+                    setActionError(err instanceof Error ? err.message : "Could not duplicate the call.");
+                  } finally {
+                    setBusyId(null);
+                  }
+                }}
+              />
               <Link
                 to="/call/$callId"
                 params={{ callId: c.id }}
