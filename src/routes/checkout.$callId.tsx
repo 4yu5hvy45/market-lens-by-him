@@ -51,6 +51,16 @@ function Checkout() {
   );
   const [error, setError] = useState<string | null>(null);
 
+  // Keep this hook before all conditional returns so the hook order is stable
+  // while the call data is loading.
+  useEffect(() => {
+    const existing = document.querySelector<HTMLScriptElement>('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+    if (existing) return;
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
   if (!call) {
     return (
@@ -73,15 +83,6 @@ function Checkout() {
       "The company, the entry band and the risk line stay behind this one-time unlock so the trade isn't crowded out.";
   // Gauge fill: 25% potential reads as a full arc.
   const fill = Math.max(6, Math.min(100, (Math.abs(potential) / 25) * 100));
-
-  useEffect(() => {
-    const existing = document.querySelector<HTMLScriptElement>('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-    if (existing) return;
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
 
   const pay = async () => {
     setState("paying");
