@@ -4,7 +4,7 @@ import { Archive, CheckCircle2, Copy, FileBarChart, LogOut, PencilLine, Plus, Ra
 import { AppShell } from "@/components/app-shell";
 import { AdminGate, adminSignOut } from "@/components/admin-gate";
 import { useCalls } from "@/lib/calls-store";
-import { closedPnlPct, livePnlPct } from "@/lib/types";
+import { closedPnlPct } from "@/lib/types";
 import { fmtCurrency, fmtDate, fmtPct } from "@/lib/format";
 
 export const Route = createFileRoute("/admin/")({
@@ -117,11 +117,6 @@ function AdminDashboard() {
                   <span className="num">{c.ticker}</span> · {fmtDate(c.publishedAt)} ·{" "}
                   {c.access === "paid" ? `₹${c.price}` : "Free"}
                 </div>
-              </div>
-              <div
-                className={`num text-sm font-bold ${livePnlPct(c) >= 0 ? "text-bull" : "text-bear"}`}
-              >
-                {fmtPct(livePnlPct(c))}
               </div>
             </div>
 

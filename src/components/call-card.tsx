@@ -2,13 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import { Sparkline } from "./sparkline";
 import { fmtCurrency, fmtPct, relativeDays } from "@/lib/format";
-import { closedPnlPct, livePnlPct, potentialPct, type StockCall } from "@/lib/types";
+import { closedPnlPct, potentialPct, type StockCall } from "@/lib/types";
 
 /**
  * Premium locked live-call tile. Identity stays hidden — only the slot number,
  * sector, timeframe and access price are public until the call is unlocked.
  */
 export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: boolean }) {
+  const isFree = call.access === "free";
+  const hasAccess = isFree || unlocked;
   return (
     <div className="card-premium sheen rise-in group relative overflow-hidden rounded-3xl p-6">
       <span
@@ -24,19 +26,19 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
         </span>
 
         <span className="flex items-center gap-1.5 rounded-full border border-[oklch(0.78_0.12_84/0.45)] bg-[oklch(0.78_0.12_84/0.1)] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-[oklch(0.55_0.1_74)]">
-          <Sparkles className="h-3 w-3" /> Premium
+          <Sparkles className="h-3 w-3" /> {isFree ? "Free" : "Premium"}
         </span>
       </div>
 
       <div className="relative mt-7 flex flex-col items-center text-center">
-        {unlocked ? (
+        {hasAccess ? (
           <>
             <div className="font-display text-lg font-extrabold">{call.stock}</div>
             <div className="mt-1 text-[11px] text-muted-foreground">
               <span className="num">{call.ticker}</span> · {call.sector}
             </div>
             <div className="mt-3 w-full opacity-90">
-              <Sparkline data={call.series} positive={livePnlPct(call) >= 0} height={44} />
+              <Sparkline data={call.series} positive={potentialPct(call) >= 0} height={44} />
             </div>
           </>
         ) : (
@@ -66,10 +68,10 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
         </div>
         <div className="text-right">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            {unlocked ? "Access" : "Unlock fee"}
+            {hasAccess ? "Access" : "Unlock fee"}
           </div>
           <div className="num mt-1 text-xl font-extrabold leading-none">
-            {unlocked ? "Owned" : `₹${call.price}`}
+            {isFree ? "Free" : hasAccess ? "Owned" : `₹${call.price}`}
           </div>
         </div>
       </div>
@@ -82,7 +84,7 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
         <span>{call.segment}</span>
       </div>
 
-      {unlocked ? (
+      {hasAccess ? (
         <Link
           to="/call/$callId"
           params={{ callId: call.id }}
@@ -101,7 +103,7 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
       )}
 
       <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-        <ShieldCheck className="h-3 w-3" /> Secure payment · instant access
+        <ShieldCheck className="h-3 w-3" /> {isFree ? "Free access · full call" : "Secure payment · instant access"}
       </p>
     </div>
   );
@@ -110,8 +112,8 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
 /** Full card used for closed / research listings. */
 export function CallCard({ call }: { call: StockCall }) {
   const closed = call.status !== "live";
-  const perf = closed ? closedPnlPct(call) : livePnlPct(call);
-  const up = perf >= 0;
+  const perf = closed ? closedPnlPct(call) : 0;
+  const up = closed ? perf >= 0 : true;
 
   return (
     <Link
@@ -133,9 +135,6 @@ export function CallCard({ call }: { call: StockCall }) {
         <div className="text-right">
           <div className="num text-base font-semibold leading-none">
             {fmtCurrency(call.currentPrice)}
-          </div>
-          <div className={`num mt-1 text-xs font-medium ${up ? "text-bull" : "text-bear"}`}>
-            {fmtPct(perf)}
           </div>
         </div>
       </div>

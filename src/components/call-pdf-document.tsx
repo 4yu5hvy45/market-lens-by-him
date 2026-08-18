@@ -3,7 +3,7 @@ import { ResearchNote } from "./research-note";
 
 function previewCall(call: StockCall): StockCall {
   // Drafts are previewed as they will appear once published live.
-  return call.status === "draft" ? { ...call, status: "live", access: "paid" } : call;
+  return call.status === "draft" ? { ...call, status: "live" } : call;
 }
 
 /**

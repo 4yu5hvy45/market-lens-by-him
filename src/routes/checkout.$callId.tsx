@@ -8,8 +8,6 @@ import {
   CreditCard,
   Eye,
   FileText,
-  Gauge,
-  LineChart,
   Lock,
   ShieldCheck,
   Target,
@@ -17,7 +15,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useCalls } from "@/lib/calls-store";
-import { potentialPct, riskPct, rrRatio } from "@/lib/types";
+import { potentialPct } from "@/lib/types";
 import { fmtPct } from "@/lib/format";
 
 export const Route = createFileRoute("/checkout/$callId")({
@@ -61,8 +59,6 @@ function Checkout() {
   }
 
   const potential = potentialPct(call);
-  const risk = riskPct(call);
-  const rr = rrRatio(call);
   const slot = String(call.callNumber).padStart(2, "0");
   const headline =
     call.checkoutHeadline?.trim() || "This setup is live. The levels are still sealed.";
@@ -84,6 +80,10 @@ function Checkout() {
   }, []);
 
   const pay = async () => {
+    if (call.access === "free") {
+      await navigate({ to: "/call/$callId", params: { callId: call.id } });
+      return;
+    }
     setState("paying");
     setError(null);
 
@@ -176,7 +176,7 @@ function Checkout() {
                   Potential left from here
                 </div>
                 <div className="mt-1 flex items-end gap-2">
-                  <span className="num text-5xl font-extrabold leading-none text-bull md:text-6xl">
+                  <span className="num text-4xl font-extrabold leading-none text-bull sm:text-5xl">
                     {fmtPct(potential)}
                   </span>
                   <TrendingUp className="mb-1.5 h-6 w-6 text-bull" strokeWidth={2.2} />
@@ -196,10 +196,13 @@ function Checkout() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 sm:w-56 sm:grid-cols-1">
-                <Stat icon={Gauge} label="Risk defined" value={`${risk.toFixed(1)}%`} />
-                <Stat icon={Target} label="Reward : risk" value={`${rr.toFixed(1)} : 1`} />
-                <Stat icon={LineChart} label="Desk conviction" value={`${call.confidence}/100`} />
+              <div className="sm:w-56">
+                <div className="rounded-2xl border border-border bg-background p-3">
+                  <div className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+                    Research access
+                  </div>
+                  <div className="mt-1 text-sm font-extrabold">Full call sheet</div>
+                </div>
               </div>
             </div>
           </section>
@@ -306,7 +309,7 @@ function Checkout() {
             <div className="mt-6 rounded-2xl border border-border bg-surface-2 p-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Call access fee</span>
-                <span className="num font-extrabold">₹{call.price}</span>
+                <span className="num font-extrabold">{call.access === "free" ? "Free" : `₹${call.price}`}</span>
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Potential left</span>
@@ -314,7 +317,7 @@ function Checkout() {
               </div>
               <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-base">
                 <span className="font-semibold">Total payable</span>
-                <span className="num font-extrabold">₹{call.price}</span>
+                <span className="num font-extrabold">{call.access === "free" ? "Free" : `₹${call.price}`}</span>
               </div>
             </div>
 
@@ -324,7 +327,15 @@ function Checkout() {
               </div>
             )}
 
-            {state === "done" ? (
+            {call.access === "free" ? (
+              <Link
+                to="/call/$callId"
+                params={{ callId: call.id }}
+                className="btn-blue sheen mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[12px] font-bold uppercase tracking-[0.18em]"
+              >
+                <Eye className="h-4 w-4" /> Open free call
+              </Link>
+            ) : state === "done" ? (
               <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-bull/35 bg-bull/10 px-4 py-4 text-sm font-bold text-bull">
                 <BadgeCheck className="h-4 w-4" /> Payment successful — opening your call
               </div>
@@ -375,7 +386,7 @@ function Checkout() {
       <div className="h-24 lg:hidden" />
 
       {/* ── Mobile sticky purchase bar ───────────────────────── */}
-      {state !== "done" && (
+      {call.access !== "free" && state !== "done" && (
         <div className="pay-bar fixed inset-x-0 bottom-0 z-40 lg:hidden">
           <div className="flex items-center justify-between gap-4 px-4 py-3">
             <div>
@@ -397,17 +408,6 @@ function Checkout() {
         </div>
       )}
     </AppShell>
-  );
-}
-
-function Stat({ icon: Icon, label, value }: { icon: typeof Gauge; label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-border bg-background p-3">
-      <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </div>
-      <div className="num mt-1 text-base font-extrabold">{value}</div>
-    </div>
   );
 }
 

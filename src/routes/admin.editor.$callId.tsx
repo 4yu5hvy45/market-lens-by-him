@@ -44,7 +44,6 @@ const blank = (): StockCall => ({
   access: "paid",
   price: 499,
   currentPrice: 0,
-  changePct: 0,
   entry: 0,
   target: 0,
   stopLoss: 0,
@@ -66,7 +65,7 @@ const blank = (): StockCall => ({
 
 
 function previewCall(call: StockCall): StockCall {
-  return call.status === "draft" ? { ...call, status: "live", access: "paid" } : call;
+  return call.status === "draft" ? { ...call, status: "live" } : call;
 }
 
 function CallEditor() {
@@ -182,6 +181,25 @@ function CallEditor() {
             onChange={(v) => set("access", v as StockCall["access"])}
           />
           <Num label="Unlock price (₹)" value={form.price} onChange={(v) => set("price", v)} />
+          <label className="block">
+            <span className="mb-1.5 block text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              Potential left override (%)
+            </span>
+            <input
+              inputMode="decimal"
+              type="number"
+              className={`${inputClass} num text-base font-semibold`}
+              value={form.potentialPctOverride ?? ""}
+              placeholder="Auto-calculate"
+              onChange={(e) => {
+                const raw = e.target.value;
+                set("potentialPctOverride", raw === "" ? undefined : Number(raw));
+              }}
+            />
+            <span className="mt-1 block text-[11px] text-muted-foreground">
+              Optional. Leave empty to calculate from entry and target.
+            </span>
+          </label>
           {slotTaken && (
             <p className="sm:col-span-2 text-[11px] font-medium text-bear">
               Slot {form.callNumber} is currently occupied by “{slotTaken.stock}”. Drafts may share a
@@ -215,43 +233,18 @@ function CallEditor() {
             value={form.currentPrice}
             onChange={(v) => set("currentPrice", v)}
           />
-          <Num label="Change %" value={form.changePct} onChange={(v) => set("changePct", v)} />
         </Card>
 
         <Card title="Levels">
           <Num label="Entry level" value={form.entry} placeholder="e.g. 680" onChange={(v) => set("entry", v)} />
           <Num label="Target level" value={form.target} placeholder="e.g. 780" onChange={(v) => set("target", v)} />
           <Num label="Stop loss" value={form.stopLoss} placeholder="e.g. 640" onChange={(v) => set("stopLoss", v)} />
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-              Potential left override (%)
-            </span>
-            <input
-              inputMode="decimal"
-              type="number"
-              className={`${inputClass} num text-base font-semibold`}
-              value={form.potentialPctOverride ?? ""}
-              placeholder="Auto-calculate"
-              onChange={(e) => {
-                const raw = e.target.value;
-                set("potentialPctOverride", raw === "" ? undefined : Number(raw));
-              }}
-            />
-          </label>
           <Select
             label="Term"
             value={form.term}
             options={terms}
             onChange={(v) => set("term", v as Term)}
           />
-          <Num
-            label="Conviction (0-100)"
-            value={form.confidence}
-            onChange={(v) => set("confidence", v)}
-          />
-          <p className="sm:col-span-2 text-[11px] text-muted-foreground">
-            Optional. Leave empty to calculate Potential left automatically from entry and target.
-          </p>
           {form.status !== "live" && (
             <Num
               label="Exit price"

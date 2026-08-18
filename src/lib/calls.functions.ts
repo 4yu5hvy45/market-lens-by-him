@@ -4,7 +4,7 @@ import type { PublicCall } from "./types";
 
 const idInput = z.object({ callId: z.string().uuid() });
 
-/** Every published call, teaser-only while live. Safe for anonymous visitors. */
+/** Every published call. Paid live calls are teaser-only; free live calls are fully public. */
 export const getPublishedCalls = createServerFn({ method: "GET" }).handler(async () => {
   const { adminClient, mapPublic } = await import("./calls.server");
   // Read the base table only on the server, then map it to the safe public
@@ -22,7 +22,7 @@ export const getPublishedCalls = createServerFn({ method: "GET" }).handler(async
   return (data ?? []).map(mapPublic) as PublicCall[];
 });
 
-/** Public header data for a single call (never includes paid fields while live). */
+/** Public data for a single call. Paid live calls never expose paid fields. */
 export const getPublicCall = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => idInput.parse(input))
   .handler(async ({ data }) => {
@@ -42,8 +42,8 @@ export const getPublicCall = createServerFn({ method: "GET" })
   });
 
 /**
- * The paid sheet. Closed/archived calls are free for everyone; a live call is
- * returned in full only when the access token maps to a verified purchase.
+ * Full call content. Closed/archived calls and free live calls are public;
+ * paid live calls require a verified purchase.
  */
 export const getCallContent = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>

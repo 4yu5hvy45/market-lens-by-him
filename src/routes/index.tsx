@@ -99,17 +99,17 @@ function LiveCalls() {
             </div>
             <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight">Live Calls</h2>
             <p className="mt-1 text-xs font-light text-muted-foreground">
-              Slots 01 – 10 · locked while the position is active
+              Slots 01 – 10 · premium and free research calls
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-bull" /> Instant unlock after payment
+            <ShieldCheck className="h-3.5 w-3.5 text-bull" /> Instant access after payment
           </div>
         </div>
 
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {live.map((c) => (
-            <LiveCallCard key={c.id} call={c} unlocked={unlocked.includes(c.id)} />
+            <LiveCallCard key={c.id} call={c} unlocked={c.access === "free" || unlocked.includes(c.id)} />
           ))}
         </div>
 
