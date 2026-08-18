@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useCalls } from "@/lib/calls-store";
-import { potentialPct, riskPct } from "@/lib/types";
+import { potentialPct, riskPct, rrRatio } from "@/lib/types";
 import { fmtPct } from "@/lib/format";
 
 export const Route = createFileRoute("/checkout/$callId")({
@@ -62,6 +62,7 @@ function Checkout() {
 
   const potential = potentialPct(call);
   const risk = riskPct(call);
+  const rr = rrRatio(call);
   const slot = String(call.callNumber).padStart(2, "0");
   const headline =
     call.checkoutHeadline?.trim() || "This setup is live. The levels are still sealed.";
@@ -197,6 +198,8 @@ function Checkout() {
 
               <div className="grid grid-cols-3 gap-3 sm:w-56 sm:grid-cols-1">
                 <Stat icon={Gauge} label="Risk defined" value={`${risk.toFixed(1)}%`} />
+                <Stat icon={Target} label="Reward : risk" value={`${rr.toFixed(1)} : 1`} />
+                <Stat icon={LineChart} label="Desk conviction" value={`${call.confidence}/100`} />
               </div>
             </div>
           </section>
@@ -376,7 +379,7 @@ function Checkout() {
         <div className="pay-bar fixed inset-x-0 bottom-0 z-40 lg:hidden">
           <div className="flex items-center justify-between gap-4 px-4 py-3">
             <div>
-              <div className="num break-all text-lg font-extrabold leading-tight">₹{call.price}</div>
+              <div className="num text-xl font-extrabold leading-none">₹{call.price}</div>
               <div className="mt-1 text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
                 One-time unlock
               </div>

@@ -42,7 +42,7 @@ export function mapPublic(row: Row): PublicCall {
   const state = row["state"] as PublicCall["state"];
   // Live calls are intentionally locked. The base table contains the real entry/target
   // values, so locking cannot depend on a NULL projection value when we read the base table.
-  const locked = state === "live" && Number(row["price_inr"] ?? 0) > 0;
+  const locked = state === "live";
   const rawPotentialOverride = row["potential_pct_override"];
   const potentialOverride =
     rawPotentialOverride === null || rawPotentialOverride === undefined || rawPotentialOverride === ""

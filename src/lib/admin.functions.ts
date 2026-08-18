@@ -35,7 +35,7 @@ export const adminGetCall = createServerFn({ method: "POST" })
     return row ? (mapFull(row) as FullCall) : null;
   });
 
-/** Creates or updates a draft/live call. Free live calls use price 0. */
+/** Creates or updates a draft/live call. */
 export const adminSaveCall = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
@@ -238,7 +238,7 @@ export const adminCloseCall = createServerFn({ method: "POST" })
     return { realisedPct };
   });
 
-/** Re-list a previously closed/archived call as live after validating its content. Free calls use price 0. */
+/** Re-list a previously closed/archived call as live after validating its content. */
 export const adminRelistCall = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => callId.parse(input))
   .handler(async ({ data }) => {
