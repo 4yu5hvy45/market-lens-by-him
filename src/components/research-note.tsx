@@ -22,7 +22,7 @@ export function ResearchNote({ call }: { call: StockCall }) {
           <Meta label="Call No." value={String(call.callNumber).padStart(2, "0")} />
         </div>
 
-        <h1 className="mt-7 font-display text-3xl font-extrabold uppercase leading-tight md:text-[40px]">
+        <h1 className="mt-7 min-w-0 break-words font-display text-[clamp(1.7rem,7vw,2.5rem)] font-extrabold uppercase leading-tight [overflow-wrap:anywhere]">
           {call.stock}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -32,7 +32,7 @@ export function ResearchNote({ call }: { call: StockCall }) {
           <span className="num">{fmtCurrency(call.currentPrice)}</span>
         </p>
 
-        <div className="mt-7 grid gap-4 sm:grid-cols-3">
+        <div className="mt-7 grid min-w-0 gap-4 sm:grid-cols-3">
           <LevelBox label="Entry Level" value={fmtCurrency(call.entry, 0)} tone="navy" />
           <LevelBox label="Target Level" value={`${fmtCurrency(call.target, 0)}+`} tone="bull" />
           <LevelBox label="Stop Loss" value={fmtCurrency(call.stopLoss, 0)} tone="bear" />
@@ -141,7 +141,9 @@ function LevelBox({
       >
         {label}
       </div>
-      <div className="num px-3 py-5 text-center text-xl font-extrabold sm:text-2xl">{value}</div>
+      <div className="num min-w-0 break-words px-3 py-5 text-center text-[clamp(0.95rem,4.2vw,1.5rem)] font-extrabold leading-tight [overflow-wrap:anywhere]">
+        {value}
+      </div>
     </div>
   );
 }

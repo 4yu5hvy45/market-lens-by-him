@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import type { KeyboardEvent } from "react";
 import { ArrowRight, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import { Sparkline } from "./sparkline";
 import { fmtCurrency, fmtPct, relativeDays } from "@/lib/format";
@@ -9,10 +10,33 @@ import { closedPnlPct, potentialPct, type StockCall } from "@/lib/types";
  * sector, timeframe and access price are public until the call is unlocked.
  */
 export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: boolean }) {
+  const navigate = useNavigate();
   const isFree = call.access === "free";
   const hasAccess = isFree || unlocked;
+  const openFreeCall = () => {
+    if (isFree) {
+      void navigate({ to: "/call/$callId", params: { callId: call.id } });
+    }
+  };
+
+  const handleFreeKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!isFree) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openFreeCall();
+    }
+  };
+
   return (
-    <div className="card-premium sheen rise-in group relative overflow-hidden rounded-3xl p-6">
+    <div
+      className={`card-premium sheen rise-in group relative overflow-hidden rounded-3xl p-6 ${
+        isFree ? "cursor-pointer" : ""
+      }`}
+      onClick={isFree ? openFreeCall : undefined}
+      onKeyDown={isFree ? handleFreeKeyDown : undefined}
+      role={isFree ? "link" : undefined}
+      tabIndex={isFree ? 0 : undefined}
+    >
       <span
         aria-hidden
         className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-[oklch(0.78_0.12_84/0.14)] blur-2xl"
@@ -40,6 +64,14 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
             <div className="mt-3 w-full opacity-90">
               <Sparkline data={call.series} positive={potentialPct(call) >= 0} height={44} />
             </div>
+
+            {isFree && (
+              <div className="mt-4 grid w-full grid-cols-3 gap-2 text-left">
+                <FreeLevel label="Entry" value={fmtCurrency(call.entry, 0)} />
+                <FreeLevel label="Target" value={fmtCurrency(call.target, 0)} />
+                <FreeLevel label="Stop Loss" value={fmtCurrency(call.stopLoss, 0)} />
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -84,7 +116,7 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
         <span>{call.segment}</span>
       </div>
 
-      {hasAccess ? (
+      {isFree ? null : hasAccess ? (
         <Link
           to="/call/$callId"
           params={{ callId: call.id }}
@@ -102,9 +134,22 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
         </Link>
       )}
 
-      <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-        <ShieldCheck className="h-3 w-3" /> {isFree ? "Free access · full call" : "Secure payment · instant access"}
-      </p>
+      {!isFree && (
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+          <ShieldCheck className="h-3 w-3" /> Secure payment · instant access
+        </p>
+      )}
+    </div>
+  );
+}
+
+function FreeLevel({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-border bg-surface-2 px-2.5 py-2.5">
+      <div className="text-[8px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
+      <div className="num mt-1 min-w-0 break-words text-[clamp(0.75rem,3.4vw,0.95rem)] font-extrabold leading-tight [overflow-wrap:anywhere]">
+        {value}
+      </div>
     </div>
   );
 }

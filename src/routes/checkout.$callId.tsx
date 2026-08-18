@@ -41,7 +41,7 @@ export const Route = createFileRoute("/checkout/$callId")({
 
 function Checkout() {
   const { callId } = useParams({ from: "/checkout/$callId" });
-  const { getCall, unlock, unlocked } = useCalls();
+  const { getCall, calls, unlock, unlocked } = useCalls();
   const navigate = useNavigate();
   const call = getCall(callId);
   const [state, setState] = useState<"idle" | "paying" | "done">(
@@ -49,11 +49,25 @@ function Checkout() {
   );
   const [error, setError] = useState<string | null>(null);
 
+  // Keep hooks unconditional: on a direct checkout URL the public call list
+  // can still be loading on the first render.
+  useEffect(() => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://checkout.razorpay.com/v1/checkout.js"]',
+    );
+    if (existing) return;
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
   if (!call) {
     return (
       <AppShell>
-        <p className="py-24 text-center text-sm text-muted-foreground">This call is unavailable.</p>
+        <p className="py-24 text-center text-sm text-muted-foreground">
+          {calls.length === 0 ? "Loading this call…" : "This call is unavailable."}
+        </p>
       </AppShell>
     );
   }
@@ -69,15 +83,6 @@ function Checkout() {
       "The company, the entry band and the risk line stay behind this one-time unlock so the trade isn't crowded out.";
   // Gauge fill: 25% potential reads as a full arc.
   const fill = Math.max(6, Math.min(100, (Math.abs(potential) / 25) * 100));
-
-  useEffect(() => {
-    const existing = document.querySelector<HTMLScriptElement>('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-    if (existing) return;
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
 
   const pay = async () => {
     if (call.access === "free") {
