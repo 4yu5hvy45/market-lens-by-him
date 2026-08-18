@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { startPurchase, confirmPayment } from "@/lib/payments.functions";
 import {
   ArrowRight,
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/checkout/$callId")({
 });
 
 function Checkout() {
-  const { callId } = useParams({ from: "/checkout/$callId" });
+  const { callId } = Route.useParams();
   const { getCall, calls, unlock, unlocked } = useCalls();
   const navigate = useNavigate();
   const call = getCall(callId);
@@ -48,19 +48,6 @@ function Checkout() {
     call && unlocked.includes(call.id) ? "done" : "idle",
   );
   const [error, setError] = useState<string | null>(null);
-
-  // Keep hooks unconditional: on a direct checkout URL the public call list
-  // can still be loading on the first render.
-  useEffect(() => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      'script[src="https://checkout.razorpay.com/v1/checkout.js"]',
-    );
-    if (existing) return;
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
 
   if (!call) {
     return (
@@ -94,11 +81,7 @@ function Checkout() {
 
     try {
       const order = await startPurchase({ data: { callId: call.id } });
-      if (!(window as typeof window & { Razorpay?: any }).Razorpay) {
-        throw new Error("Razorpay Checkout could not be loaded. Check your internet connection and try again.");
-      }
-
-      const Razorpay = (window as typeof window & { Razorpay: any }).Razorpay;
+      const Razorpay = await loadRazorpay();
       const checkout = new Razorpay({
         key: order.keyId,
         amount: Math.round(order.amount * 100),
@@ -414,6 +397,33 @@ function Checkout() {
       )}
     </AppShell>
   );
+}
+
+async function loadRazorpay() {
+  if (typeof window === "undefined") throw new Error("Payment is only available in a browser.");
+  const existing = (window as typeof window & { Razorpay?: any }).Razorpay;
+  if (existing) return existing;
+
+  await new Promise<void>((resolve, reject) => {
+    const current = document.querySelector<HTMLScriptElement>(
+      'script[src="https://checkout.razorpay.com/v1/checkout.js"]',
+    );
+    if (current) {
+      current.addEventListener("load", () => resolve(), { once: true });
+      current.addEventListener("error", () => reject(new Error("Razorpay Checkout could not be loaded. Check your internet connection and try again.")), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Razorpay Checkout could not be loaded. Check your internet connection and try again."));
+    document.body.appendChild(script);
+  });
+
+  const loaded = (window as typeof window & { Razorpay?: any }).Razorpay;
+  if (!loaded) throw new Error("Razorpay Checkout could not be loaded. Check your internet connection and try again.");
+  return loaded;
 }
 
 function Row({ label, value }: { label: string; value: string }) {

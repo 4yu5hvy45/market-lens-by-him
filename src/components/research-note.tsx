@@ -141,11 +141,23 @@ function LevelBox({
       >
         {label}
       </div>
-      <div className="num min-w-0 break-words px-3 py-5 text-center text-[clamp(0.95rem,4.2vw,1.5rem)] font-extrabold leading-tight [overflow-wrap:anywhere]">
+      <div
+        className={`num min-w-0 whitespace-nowrap px-2 py-5 text-center font-extrabold leading-tight ${fitLevelValue(value)}`}
+      >
         {value}
       </div>
     </div>
   );
+}
+
+
+function fitLevelValue(value: string) {
+  const length = value.replace(/\s/g, "").length;
+  if (length <= 8) return "text-2xl";
+  if (length <= 10) return "text-xl";
+  if (length <= 12) return "text-lg";
+  if (length <= 14) return "text-base";
+  return "text-sm";
 }
 
 function Chip({ label, value, tone }: { label: string; value: string; tone?: string }) {

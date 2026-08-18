@@ -92,7 +92,7 @@ function toInput(c: StockCall) {
   return {
     callNumber: c.callNumber,
     state: c.status,
-    price: c.price,
+    price: c.access === "free" ? 0 : c.price,
     stock: c.stock,
     ticker: c.ticker,
     exchange: c.exchange,

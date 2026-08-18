@@ -61,9 +61,11 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
             <div className="mt-1 text-[11px] text-muted-foreground">
               <span className="num">{call.ticker}</span> · {call.sector}
             </div>
-            <div className="mt-3 w-full opacity-90">
-              <Sparkline data={call.series} positive={potentialPct(call) >= 0} height={44} />
-            </div>
+            {!isFree && (
+              <div className="mt-3 w-full opacity-90">
+                <Sparkline data={call.series} positive={potentialPct(call) >= 0} height={44} />
+              </div>
+            )}
 
             {isFree && (
               <div className="mt-4 grid w-full grid-cols-3 gap-2 text-left">
@@ -144,10 +146,15 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
 }
 
 function FreeLevel({ label, value }: { label: string; value: string }) {
+  const compact = value.replace(/\s/g, "").length > 11;
   return (
     <div className="min-w-0 rounded-xl border border-border bg-surface-2 px-2.5 py-2.5">
       <div className="text-[8px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
-      <div className="num mt-1 min-w-0 break-words text-[clamp(0.75rem,3.4vw,0.95rem)] font-extrabold leading-tight [overflow-wrap:anywhere]">
+      <div
+        className={`num mt-1 min-w-0 whitespace-nowrap font-extrabold leading-tight ${
+          compact ? "text-[0.66rem]" : "text-[clamp(0.72rem,3.2vw,0.95rem)]"
+        }`}
+      >
         {value}
       </div>
     </div>

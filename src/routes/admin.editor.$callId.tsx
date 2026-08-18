@@ -178,9 +178,20 @@ function CallEditor() {
             label="Access"
             value={form.access}
             options={["paid", "free"]}
-            onChange={(v) => set("access", v as StockCall["access"])}
+            onChange={(v) => {
+              const access = v as StockCall["access"];
+              setForm((current) => ({
+                ...current,
+                access,
+                price: access === "free" ? 0 : current.price > 0 ? current.price : 499,
+              }));
+            }}
           />
-          <Num label="Unlock price (₹)" value={form.price} onChange={(v) => set("price", v)} />
+          <Num
+            label="Unlock price (₹)"
+            value={form.price}
+            onChange={(v) => set("price", v)}
+          />
           <label className="block">
             <span className="mb-1.5 block text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
               Potential left override (%)
