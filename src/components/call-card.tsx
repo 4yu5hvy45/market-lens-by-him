@@ -131,7 +131,7 @@ export function CallCard({ call }: { call: StockCall }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="num text-base font-semibold leading-none">
+          <div className="num max-w-[9rem] break-all text-sm font-semibold leading-tight">
             {fmtCurrency(call.currentPrice)}
           </div>
           <div className={`num mt-1 text-xs font-medium ${up ? "text-bull" : "text-bear"}`}>
@@ -161,7 +161,7 @@ function Level({ label, value, tone }: { label: string; value: string; tone?: st
   return (
     <div className="min-w-0">
       <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
-      <div className={`num truncate text-sm font-bold ${tone ?? ""}`}>{value}</div>
+      <div className={`num break-all text-xs font-bold leading-tight sm:text-sm ${tone ?? ""}`}>{value}</div>
     </div>
   );
 }

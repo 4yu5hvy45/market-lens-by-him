@@ -50,7 +50,7 @@ export const callDraftSchema = z.object({
 export const callPublishSchema = z.object({
   callNumber: z.coerce.number().int().min(1).max(10),
   state: z.enum(["live", "closed", "archived"]).default("live"),
-  price: z.coerce.number().positive("Unlock price must be greater than 0"),
+  price: z.coerce.number().min(0, "Price cannot be negative"),
   stock: z.string().trim().min(1, "Company name is required"),
   ticker: z.string().trim().min(1, "Ticker is required"),
   entry: z.coerce.number().positive("Entry is required"),

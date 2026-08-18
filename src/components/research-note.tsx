@@ -1,6 +1,6 @@
 import { Sparkline } from "./sparkline";
 import { fmtCurrency, fmtDate, fmtPct } from "@/lib/format";
-import { closedPnlPct, livePnlPct, potentialPct, riskPct, rrRatio, type StockCall } from "@/lib/types";
+import { potentialPct, riskPct, type StockCall } from "@/lib/types";
 
 /**
  * The official Market Lens research-note layout (mirrors the printed PDF sheet):
@@ -8,7 +8,6 @@ import { closedPnlPct, livePnlPct, potentialPct, riskPct, rrRatio, type StockCal
  */
 export function ResearchNote({ call }: { call: StockCall }) {
   const closed = call.status !== "live";
-  const perf = closed ? closedPnlPct(call) : livePnlPct(call);
 
   return (
     <article className="glass overflow-hidden rounded-3xl">
@@ -29,11 +28,7 @@ export function ResearchNote({ call }: { call: StockCall }) {
           {call.exchange} <span className="px-1.5 opacity-40">|</span> Ticker:{" "}
           <span className="num">{call.ticker}</span>
           <span className="px-1.5 opacity-40">|</span> CMP (as of chart):{" "}
-          <span className="num">{fmtCurrency(call.currentPrice)}</span> (
-          <span className={call.changePct >= 0 ? "text-bull" : "text-bear"}>
-            {fmtPct(call.changePct, 2)}
-          </span>
-          )
+          <span className="num">{fmtCurrency(call.currentPrice)}</span>
         </p>
 
         <div className="mt-7 grid gap-4 sm:grid-cols-3">
@@ -49,13 +44,7 @@ export function ResearchNote({ call }: { call: StockCall }) {
 
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <Chip label="Potential" value={fmtPct(potentialPct(call))} tone="text-bull" />
-          <Chip label="Risk" value={`${riskPct(call).toFixed(1)}%`} tone="text-bear" />
-          <Chip label="Risk / Reward" value={`1 : ${rrRatio(call).toFixed(1)}`} />
-          <Chip
-            label={closed ? "Realised" : "Live P&L"}
-            value={fmtPct(perf)}
-            tone={perf >= 0 ? "text-bull" : "text-bear"}
-          />
+          <Chip label="Risk defined" value={`${riskPct(call).toFixed(1)}%`} tone="text-bear" />
         </div>
 
         <h2 className="mt-9 font-display text-xl font-extrabold text-navy">Our View</h2>
@@ -87,7 +76,7 @@ export function ResearchNote({ call }: { call: StockCall }) {
             />
           ) : (
             <>
-              <Sparkline data={call.series} positive={perf >= 0} height={180} />
+              <Sparkline data={call.series} positive={true} height={180} />
               <p className="mt-2 text-center text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                 Indicative price structure · daily
               </p>
@@ -101,8 +90,8 @@ export function ResearchNote({ call }: { call: StockCall }) {
             <Chip label="Closed on" value={call.closedAt ? fmtDate(call.closedAt) : "—"} />
             <Chip
               label="Outcome"
-              value={perf >= 0 ? "Target achieved" : "Risk exit"}
-              tone={perf >= 0 ? "text-bull" : "text-bear"}
+              value={call.exitPrice != null && call.exitPrice >= call.entry ? "Target achieved" : "Risk exit"}
+              tone={call.exitPrice != null && call.exitPrice >= call.entry ? "text-bull" : "text-bear"}
             />
           </div>
         )}
@@ -152,7 +141,7 @@ function LevelBox({
       >
         {label}
       </div>
-      <div className="num px-3 py-5 text-center text-2xl font-extrabold md:text-3xl">{value}</div>
+      <div className="num break-all px-2 py-4 text-center text-xl font-extrabold leading-tight sm:text-2xl md:px-3 md:text-2xl">{value}</div>
     </div>
   );
 }
@@ -161,7 +150,7 @@ function Chip({ label, value, tone }: { label: string; value: string; tone?: str
   return (
     <div className="rounded-xl border border-border bg-surface px-3 py-3">
       <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
-      <div className={`num mt-1 text-sm font-extrabold ${tone ?? ""}`}>{value}</div>
+      <div className={`num mt-1 break-all text-xs font-extrabold leading-tight sm:text-sm ${tone ?? ""}`}>{value}</div>
     </div>
   );
 }

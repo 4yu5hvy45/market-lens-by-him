@@ -179,9 +179,20 @@ function CallEditor() {
             label="Access"
             value={form.access}
             options={["paid", "free"]}
-            onChange={(v) => set("access", v as StockCall["access"])}
+            onChange={(v) => {
+              const access = v as StockCall["access"];
+              set("access", access);
+              if (access === "free") set("price", 0);
+              else if (form.price <= 0) set("price", 499);
+            }}
           />
-          <Num label="Unlock price (₹)" value={form.price} onChange={(v) => set("price", v)} />
+          {form.access === "paid" ? (
+            <Num label="Unlock price (₹)" value={form.price} onChange={(v) => set("price", v)} />
+          ) : (
+            <div className="rounded-xl border border-border bg-surface-2 px-3 py-3 text-sm text-muted-foreground">
+              Free call — no payment required
+            </div>
+          )
           {slotTaken && (
             <p className="sm:col-span-2 text-[11px] font-medium text-bear">
               Slot {form.callNumber} is currently occupied by “{slotTaken.stock}”. Drafts may share a
@@ -215,7 +226,6 @@ function CallEditor() {
             value={form.currentPrice}
             onChange={(v) => set("currentPrice", v)}
           />
-          <Num label="Change %" value={form.changePct} onChange={(v) => set("changePct", v)} />
         </Card>
 
         <Card title="Levels">
@@ -229,7 +239,7 @@ function CallEditor() {
             <input
               inputMode="decimal"
               type="number"
-              className={`${inputClass} num text-base font-semibold`}
+              className={`${inputClass} num text-sm font-semibold`}
               value={form.potentialPctOverride ?? ""}
               placeholder="Auto-calculate"
               onChange={(e) => {
@@ -244,13 +254,8 @@ function CallEditor() {
             options={terms}
             onChange={(v) => set("term", v as Term)}
           />
-          <Num
-            label="Conviction (0-100)"
-            value={form.confidence}
-            onChange={(v) => set("confidence", v)}
-          />
           <p className="sm:col-span-2 text-[11px] text-muted-foreground">
-            Optional. Leave empty to calculate Potential left automatically from entry and target.
+            Leave empty to calculate Potential left automatically from entry and target.
           </p>
           {form.status !== "live" && (
             <Num
@@ -480,7 +485,7 @@ function Num({
       </span>
       <input
         inputMode="decimal"
-        className={`${inputClass} num text-base font-semibold`}
+        className={`${inputClass} num text-sm font-semibold`}
         value={value || ""}
         placeholder={placeholder}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
