@@ -1,5 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { startPurchase, confirmPayment } from "@/lib/payments.functions";
 import {
   ArrowRight,
@@ -9,6 +10,7 @@ import {
   Eye,
   FileText,
   Lock,
+  LineChart,
   ShieldCheck,
   Target,
   TrendingUp,
@@ -40,8 +42,10 @@ export const Route = createFileRoute("/checkout/$callId")({
 });
 
 function Checkout() {
-  const { callId } = Route.useParams();
+  const { callId } = useParams({ from: "/checkout/$callId" });
   const { getCall, calls, unlock, unlocked } = useCalls();
+  const createOrder = useServerFn(startPurchase);
+  const verifyPayment = useServerFn(confirmPayment);
   const navigate = useNavigate();
   const call = getCall(callId);
   const [state, setState] = useState<"idle" | "paying" | "done">(
@@ -80,7 +84,7 @@ function Checkout() {
     setError(null);
 
     try {
-      const order = await startPurchase({ data: { callId: call.id } });
+      const order = await createOrder({ data: { callId: call.id } });
       const Razorpay = await loadRazorpay();
       const checkout = new Razorpay({
         key: order.keyId,
@@ -95,7 +99,7 @@ function Checkout() {
         },
         handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
-            const verified = await confirmPayment({
+            const verified = await verifyPayment({
               data: {
                 orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,

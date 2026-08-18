@@ -142,7 +142,9 @@ function LevelBox({
         {label}
       </div>
       <div
-        className={`num min-w-0 whitespace-nowrap px-2 py-5 text-center font-extrabold leading-tight ${fitLevelValue(value)}`}
+        className="num min-w-0 overflow-hidden whitespace-nowrap px-2 py-5 text-center font-extrabold leading-tight tracking-[-0.03em]"
+        style={{ fontSize: fitLevelFontSize(value) }}
+        title={value}
       >
         {value}
       </div>
@@ -151,13 +153,13 @@ function LevelBox({
 }
 
 
-function fitLevelValue(value: string) {
+function fitLevelFontSize(value: string) {
   const length = value.replace(/\s/g, "").length;
-  if (length <= 8) return "text-2xl";
-  if (length <= 10) return "text-xl";
-  if (length <= 12) return "text-lg";
-  if (length <= 14) return "text-base";
-  return "text-sm";
+  if (length <= 8) return "clamp(1.45rem, 4vw, 2rem)";
+  if (length <= 10) return "clamp(1.25rem, 3.5vw, 1.65rem)";
+  if (length <= 12) return "clamp(1.05rem, 3vw, 1.4rem)";
+  if (length <= 14) return "clamp(0.9rem, 2.5vw, 1.15rem)";
+  return "clamp(0.78rem, 2.2vw, 1rem)";
 }
 
 function Chip({ label, value, tone }: { label: string; value: string; tone?: string }) {

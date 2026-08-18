@@ -146,14 +146,21 @@ export function LiveCallCard({ call, unlocked }: { call: StockCall; unlocked: bo
 }
 
 function FreeLevel({ label, value }: { label: string; value: string }) {
-  const compact = value.replace(/\s/g, "").length > 11;
+  const length = value.replace(/\s/g, "").length;
+  const fontSize =
+    length <= 8 ? "0.95rem" :
+    length <= 10 ? "0.86rem" :
+    length <= 12 ? "0.76rem" :
+    length <= 14 ? "0.68rem" :
+    "0.62rem";
+
   return (
-    <div className="min-w-0 rounded-xl border border-border bg-surface-2 px-2.5 py-2.5">
+    <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface-2 px-2.5 py-2.5">
       <div className="text-[8px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
       <div
-        className={`num mt-1 min-w-0 whitespace-nowrap font-extrabold leading-tight ${
-          compact ? "text-[0.66rem]" : "text-[clamp(0.72rem,3.2vw,0.95rem)]"
-        }`}
+        className="num mt-1 min-w-0 overflow-hidden whitespace-nowrap font-extrabold leading-tight tracking-[-0.02em]"
+        style={{ fontSize }}
+        title={value}
       >
         {value}
       </div>
