@@ -229,6 +229,13 @@ function AdminDashboard() {
               </span>
               {c.status === "closed" ? (
                 <>
+                  <Action
+                    icon={PencilLine}
+                    label="Edit"
+                    onClick={() =>
+                      navigate({ to: "/admin/editor/$callId", params: { callId: c.id } })
+                    }
+                  />
                   <Action icon={Radio} label={busyId === c.id ? "Saving…" : "Relist"} onClick={async () => {
                     setActionError(null); setBusyId(c.id);
                     try { await relistCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not relist the call."); } finally { setBusyId(null); }
@@ -239,10 +246,19 @@ function AdminDashboard() {
                   }} />
                 </>
               ) : c.status === "archived" ? (
-                <Action icon={Radio} label={busyId === c.id ? "Saving…" : "Relist"} onClick={async () => {
+                <>
+                  <Action
+                    icon={PencilLine}
+                    label="Edit"
+                    onClick={() =>
+                      navigate({ to: "/admin/editor/$callId", params: { callId: c.id } })
+                    }
+                  />
+                  <Action icon={Radio} label={busyId === c.id ? "Saving…" : "Relist"} onClick={async () => {
                   setActionError(null); setBusyId(c.id);
                   try { await relistCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not relist the call."); } finally { setBusyId(null); }
                 }} />
+                </>
               ) : (
                 <Action
                   icon={Radio}
