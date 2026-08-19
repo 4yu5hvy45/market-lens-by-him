@@ -480,12 +480,11 @@
     print-color-adjust: exact;
   }
 
-  .no-print,
-  .screen-call-sheet {
+  .no-print {
     display: none !important;
   }
 
-  .print-only-pdf {
+  .screen-call-sheet {
     display: block !important;
   }
 
@@ -495,33 +494,17 @@
     overflow: visible !important;
   }
 
-  .pdf-document {
-    width: 210mm;
-    margin: 0 auto;
-    background: #fff;
-    color: #101a31;
-  }
-
-  .pdf-document .glass,
-  .pdf-document .pdf-research {
-    background: #fff !important;
+  .screen-call-sheet .glass {
     box-shadow: none !important;
     backdrop-filter: none !important;
   }
 
-  .pdf-document img {
-    break-inside: avoid;
-  }
-
-  .pdf-break-avoid {
+  .screen-call-sheet img {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 }
 
-.print-only-pdf {
-  display: none;
-}
 
 .pdf-preview-sheet {
   width: 210mm;

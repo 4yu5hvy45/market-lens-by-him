@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Archive, CheckCircle2, Copy, FileBarChart, LogOut, PencilLine, Plus, Radio } from "lucide-react";
+import { Archive, CheckCircle2, Copy, FileBarChart, LogOut, PencilLine, Plus, Radio, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AdminGate, adminSignOut } from "@/components/admin-gate";
 import { useCalls } from "@/lib/calls-store";
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function AdminDashboard() {
-  const { calls, refreshAdmin, closeCall, archiveCall, publishCall, duplicateCall } = useCalls();
+  const { calls, refreshAdmin, closeCall, archiveCall, publishCall, relistCall, deleteCall, duplicateCall } = useCalls();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -228,23 +228,28 @@ function AdminDashboard() {
                 {fmtPct(closedPnlPct(c))}
               </span>
               {c.status === "closed" ? (
-                <Action icon={Archive} label={busyId === c.id ? "Saving…" : "Archive"} onClick={async () => {
+                <>
+                  <Action icon={Radio} label={busyId === c.id ? "Saving…" : "Relist"} onClick={async () => {
+                    setActionError(null); setBusyId(c.id);
+                    try { await relistCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not relist the call."); } finally { setBusyId(null); }
+                  }} />
+                  <Action icon={Archive} label={busyId === c.id ? "Saving…" : "Archive"} onClick={async () => {
+                    setActionError(null); setBusyId(c.id);
+                    try { await archiveCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not archive the call."); } finally { setBusyId(null); }
+                  }} />
+                </>
+              ) : c.status === "archived" ? (
+                <Action icon={Radio} label={busyId === c.id ? "Saving…" : "Relist"} onClick={async () => {
                   setActionError(null); setBusyId(c.id);
-                  try { await archiveCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not archive the call."); } finally { setBusyId(null); }
+                  try { await relistCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not relist the call."); } finally { setBusyId(null); }
                 }} />
               ) : (
                 <Action
                   icon={Radio}
-                  label={busyId === c.id ? "Saving…" : c.status === "draft" ? "Publish" : "Relist"}
+                  label={busyId === c.id ? "Saving…" : "Publish"}
                   onClick={async () => {
                     setActionError(null); setBusyId(c.id);
-                    try {
-                      await publishCall(c.id);
-                    } catch (err) {
-                      setActionError(err instanceof Error ? err.message : "Could not publish the call.");
-                    } finally {
-                      setBusyId(null);
-                    }
+                    try { await publishCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not publish the call."); } finally { setBusyId(null); }
                   }}
                 />
               )}
@@ -262,6 +267,16 @@ function AdminDashboard() {
                   } finally {
                     setBusyId(null);
                   }
+                }}
+              />
+              <Action
+                icon={Trash2}
+                label={busyId === `delete-${c.id}` ? "Deleting…" : "Delete"}
+                onClick={async () => {
+                  if (!window.confirm(`Permanently delete ${c.stock || "this call"}? This cannot be undone.`)) return;
+                  setActionError(null);
+                  setBusyId(`delete-${c.id}`);
+                  try { await deleteCall(c.id); } catch (err) { setActionError(err instanceof Error ? err.message : "Could not delete the call."); } finally { setBusyId(null); }
                 }}
               />
               <Link

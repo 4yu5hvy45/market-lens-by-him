@@ -227,7 +227,6 @@ export const adminCloseCall = createServerFn({ method: "POST" })
         exit_price: data.exitPrice,
         current_price: data.exitPrice,
         change_pct: realisedPct,
-        price_inr: 0,
         closed_at: new Date().toISOString(),
       })
       .eq("id", data.callId);
@@ -286,9 +285,35 @@ export const adminArchiveCall = createServerFn({ method: "POST" })
     const db = await adminClient();
     const { error } = await db
       .from("calls")
-      .update({ state: "archived", price_inr: 0 })
+      .update({ state: "archived" })
       .eq("id", data.callId);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Permanently delete a call. Purchase records cascade from the call row. */
+export const adminDeleteCall = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => callId.parse(input))
+  .handler(async ({ data }) => {
+    const { requireAdminSession } = await import("./admin-session.server");
+    await requireAdminSession();
+    const { adminClient } = await import("./calls.server");
+    const db = await adminClient();
+
+    const { data: call } = await db
+      .from("calls")
+      .select("id, state")
+      .eq("id", data.callId)
+      .maybeSingle();
+
+    if (!call) throw new Error("Call not found.");
+    if (call.state === "live") throw new Error("Close or archive the live call before deleting it.");
+
+    const { error } = await db.from("calls").delete().eq("id", data.callId);
+    if (error) {
+      console.error("adminDeleteCall", error);
+      throw new Error(`Could not delete call: ${error.message}`);
+    }
     return { ok: true };
   });
 

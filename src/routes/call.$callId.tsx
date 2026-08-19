@@ -1,8 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Check, Download, Lock } from "lucide-react";
+import { ArrowLeft, Check, Lock, Printer } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ResearchNote } from "@/components/research-note";
-import { CallPdfDocument } from "@/components/call-pdf-document";
 import { useCalls } from "@/lib/calls-store";
 import { potentialPct, type StockCall } from "@/lib/types";
 import { fmtPct } from "@/lib/format";
@@ -66,7 +65,7 @@ function CallDetail() {
             onClick={() => window.print()}
             className="btn-blue sheen flex items-center gap-2 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.16em]"
           >
-            <Download className="h-3.5 w-3.5" /> Download PDF
+            <Printer className="h-3.5 w-3.5" /> Print page
           </button>
         </div>
       </div>
@@ -89,9 +88,6 @@ function CallDetail() {
         )}
       </div>
 
-      <div className="print-only-pdf">
-        <CallPdfDocument call={call} />
-      </div>
     </AppShell>
   );
 }

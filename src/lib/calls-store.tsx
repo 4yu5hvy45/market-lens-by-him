@@ -18,6 +18,7 @@ import {
   adminCloseCall,
   adminArchiveCall,
   adminDuplicateCall,
+  adminDeleteCall,
 } from "./admin.functions";
 import type { FullCall, PublicCall, StockCall } from "./types";
 import { normalizeSeries } from "./series";
@@ -32,6 +33,8 @@ interface CallsContextValue {
   archiveCall: (id: string) => Promise<void>;
   publishCall: (id: string) => Promise<void>;
   duplicateCall: (id: string) => Promise<{ id: string; callNumber: number }>;
+  relistCall: (id: string) => Promise<void>;
+  deleteCall: (id: string) => Promise<void>;
   unlock: (id: string, accessToken?: string) => Promise<FullCall | PublicCall | null>;
   unlocked: string[];
 }
@@ -82,7 +85,7 @@ function toAdminStockCall(c: FullCall): StockCall {
   return {
     ...toStockCall(c),
     status: c.state,
-    access: c.price > 0 && c.state === "live" ? "paid" : "free",
+    access: c.price > 0 ? "paid" : "free",
     checkoutHeadline: c.checkoutHeadline,
     checkoutSubtext: c.checkoutSubtext,
   };
@@ -130,6 +133,7 @@ export function CallsProvider({ children }: { children: ReactNode }) {
   const close = useServerFn(adminCloseCall);
   const archive = useServerFn(adminArchiveCall);
   const duplicate = useServerFn(adminDuplicateCall);
+  const deleteCallFn = useServerFn(adminDeleteCall);
 
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
@@ -207,6 +211,16 @@ export function CallsProvider({ children }: { children: ReactNode }) {
     await refreshAdmin();
   }, [publish, refreshAdmin]);
 
+  const relistCall = useCallback(async (id: string) => {
+    await relist({ data: { callId: id } });
+    await refreshAdmin();
+  }, [relist, refreshAdmin]);
+
+  const deleteCall = useCallback(async (id: string) => {
+    await deleteCallFn({ data: { callId: id } });
+    await refreshAdmin();
+  }, [deleteCallFn, refreshAdmin]);
+
   const duplicateCall = useCallback(async (id: string) => {
     const result = await duplicate({ data: { callId: id } });
     await refreshAdmin();
@@ -235,9 +249,11 @@ export function CallsProvider({ children }: { children: ReactNode }) {
     closeCall,
     archiveCall,
     publishCall,
+    relistCall,
+    deleteCall,
     duplicateCall,
     unlock,
-  }), [calls, unlocked, refreshAdmin, createCall, updateCall, closeCall, archiveCall, publishCall, duplicateCall, unlock]);
+  }), [calls, unlocked, refreshAdmin, createCall, updateCall, closeCall, archiveCall, publishCall, relistCall, deleteCall, duplicateCall, unlock]);
 
   return <CallsContext.Provider value={value}>{children}</CallsContext.Provider>;
 }

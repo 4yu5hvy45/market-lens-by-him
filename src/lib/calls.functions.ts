@@ -13,7 +13,7 @@ export const getPublishedCalls = createServerFn({ method: "GET" }).handler(async
   const { data, error } = await db
     .from("calls")
     .select("*")
-    .in("state", ["live", "closed", "archived"])
+    .in("state", ["live", "closed"])
     .order("call_number", { ascending: true });
   if (error) {
     console.error("getPublishedCalls", error);
@@ -32,7 +32,7 @@ export const getPublicCall = createServerFn({ method: "GET" })
       .from("calls")
       .select("*")
       .eq("id", data.callId)
-      .in("state", ["live", "closed", "archived"])
+      .in("state", ["live", "closed"])
       .maybeSingle();
     if (error) {
       console.error("getPublicCall", error);
@@ -59,7 +59,7 @@ export const getCallContent = createServerFn({ method: "POST" })
       .from("calls")
       .select("*")
       .eq("id", data.callId)
-      .in("state", ["live", "closed", "archived"])
+      .in("state", ["live", "closed"])
       .maybeSingle();
     if (!pub) return null;
 
