@@ -26,28 +26,29 @@ export type Database = {
           confidence: number
           coverage: string
           created_at: string
-          current_price: number
+          current_price: number | null
           direction: Database["public"]["Enums"]["call_direction"]
-          entry: number
+          entry: number | null
           exchange: string
           exit_price: number | null
           id: string
           price_inr: number
           published_at: string | null
           research: Json
+          realised_pnl_pct_override: number | null
           sector: string
           segment: string
           series: Json
           state: Database["public"]["Enums"]["call_state"]
-          stock_name: string
-          stop_loss: number
+          stock_name: string | null
+          stop_loss: number | null
           summary: string
-          target: number
+          target: number | null
           term: string
-          ticker: string
-          timeframe: string
+          ticker: string | null
+          timeframe: string | null
           updated_at: string
-          view_text: string
+          view_text: string | null
         }
         Insert: {
           call_number: number
@@ -60,25 +61,26 @@ export type Database = {
           confidence?: number
           coverage?: string
           created_at?: string
-          current_price: number
+          current_price: number | null
           direction?: Database["public"]["Enums"]["call_direction"]
-          entry: number
+          entry: number | null
           exchange?: string
           exit_price?: number | null
           id?: string
           price_inr?: number
           published_at?: string | null
           research?: Json
+          realised_pnl_pct_override?: number | null
           sector?: string
           segment?: string
           series?: Json
           state?: Database["public"]["Enums"]["call_state"]
-          stock_name: string
-          stop_loss: number
+          stock_name: string | null
+          stop_loss: number | null
           summary?: string
-          target: number
+          target: number | null
           term?: string
-          ticker: string
+          ticker: string | null
           timeframe?: string
           updated_at?: string
           view_text?: string
@@ -103,6 +105,7 @@ export type Database = {
           price_inr?: number
           published_at?: string | null
           research?: Json
+          realised_pnl_pct_override?: number | null
           sector?: string
           segment?: string
           series?: Json
@@ -308,6 +311,7 @@ export type Database = {
           entry: number | null
           exchange: string | null
           exit_price: number | null
+          realised_pnl_pct_override: number | null
           id: string | null
           potential_pct: number | null
           price_inr: number | null

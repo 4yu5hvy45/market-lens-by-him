@@ -12,6 +12,7 @@ const researchDraftSchema = z.object({
 
 export const callDraftSchema = z.object({
   callNumber: z.coerce.number().int().min(1).max(10),
+  publishedAt: z.string().default(""),
   state: z.enum(["draft", "live", "closed", "archived"]).default("draft"),
   price: z.coerce.number().min(0).default(499),
   stock: z.string().default(""),
@@ -22,6 +23,10 @@ export const callDraftSchema = z.object({
   entry: z.coerce.number().min(0).default(0),
   target: z.coerce.number().min(0).default(0),
   stopLoss: z.coerce.number().min(0).default(0),
+  exitPrice: z.preprocess(
+    (value) => (value === "" || value === null || value === undefined ? undefined : Number(value)),
+    z.number().finite().positive().optional(),
+  ),
   currentPrice: z.coerce.number().min(0).default(0),
   term: z.string().default("Swing"),
   coverage: z.string().default("Weekly Pick"),

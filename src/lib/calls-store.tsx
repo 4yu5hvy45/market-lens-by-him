@@ -76,6 +76,7 @@ function toStockCall(c: PublicCall): StockCall {
     potentialPctDisplay: c.potentialPct,
     riskPctDisplay: c.riskPct,
     potentialPctOverride: c.potentialPctOverride,
+    realisedPnlPctOverride: c.realisedPnlPctOverride,
     checkoutHeadline: c.checkoutHeadline,
     checkoutSubtext: c.checkoutSubtext,
   };
@@ -94,6 +95,7 @@ function toAdminStockCall(c: FullCall): StockCall {
 function toInput(c: StockCall) {
   return {
     callNumber: c.callNumber,
+    publishedAt: c.publishedAt,
     state: c.status,
     price: c.access === "free" ? 0 : c.price,
     stock: c.stock,
@@ -104,6 +106,7 @@ function toInput(c: StockCall) {
     entry: c.entry,
     target: c.target,
     stopLoss: c.stopLoss,
+    exitPrice: c.exitPrice,
     currentPrice: c.currentPrice,
     term: c.term,
     coverage: c.coverage,
@@ -118,6 +121,7 @@ function toInput(c: StockCall) {
     series: normalizeSeries(c.series),
     chartImage: c.chartImage,
     potentialPctOverride: c.potentialPctOverride,
+    realisedPnlPctOverride: c.realisedPnlPctOverride,
     checkoutHeadline: c.checkoutHeadline ?? "",
     checkoutSubtext: c.checkoutSubtext ?? "",
   };

@@ -26,6 +26,8 @@ export interface PublicCall {
   /** Optional admin-set display override for Potential left. */
   potentialPctOverride?: number;
   riskPct: number;
+  /** Optional admin override for realised gain/loss on closed calls. */
+  realisedPnlPctOverride?: number;
   /** True while the paid fields below are withheld by the server. */
   locked: boolean;
   /** Present only when `locked` is false. */

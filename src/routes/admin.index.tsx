@@ -211,9 +211,6 @@ function AdminDashboard() {
           >
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">
-                <span className="num mr-1.5 text-muted-foreground">
-                  #{String(c.callNumber).padStart(2, "0")}
-                </span>
                 {c.stock}
               </div>
               <div className="truncate text-[11px] text-muted-foreground">
@@ -222,11 +219,15 @@ function AdminDashboard() {
               </div>
             </div>
             <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:flex-nowrap">
-              <span
-                className={`num text-sm font-bold ${closedPnlPct(c) >= 0 ? "text-bull" : "text-bear"}`}
-              >
-                {fmtPct(closedPnlPct(c))}
-              </span>
+              {c.status === "closed" || c.status === "archived" ? (
+                <span
+                  className={`num text-sm font-bold ${closedPnlPct(c) >= 0 ? "text-bull" : "text-bear"}`}
+                >
+                  {fmtPct(closedPnlPct(c))}
+                </span>
+              ) : (
+                <span className="num text-sm font-semibold text-muted-foreground">—</span>
+              )}
               {c.status === "closed" ? (
                 <>
                   <Action

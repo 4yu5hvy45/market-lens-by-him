@@ -35,3 +35,10 @@ The current production database already has the missing checkout columns because
 ## 2026-08-12 — Legacy chart series compatibility fix
 
 Fixed Admin edit/save failures caused by legacy `calls.series` JSON containing objects instead of the current `number[]` contract. Added a central normalizer that accepts numeric points and common legacy object shapes (`value`, `y`, `price`, `close`, `currentPrice`, `v`) and converts them to numbers before validation and rendering. Admin saves now write the normalized numeric series back to Supabase.
+
+## Closed-call edit persistence (2026-08-21)
+
+The Edit Call form now persists every editable trade field, including `published_at`, `exit_price`, and `realised_pnl_pct_override`. The public closed-call projection also exposes the realised override for closed/archived calls.
+
+**Production requirement:** run the Supabase migrations in `supabase/migrations/` before deploying this version. In particular, `20260821000000_closed_pnl_override.sql` and `20260821010000_closed_call_edit_persistence.sql` must be applied so the database column and public projection match the application code.
+

@@ -3,6 +3,7 @@ import type { CallDraftParsed } from "./call-schema";
 export function toRow(v: CallDraftParsed) {
   return {
     call_number: v.callNumber,
+    published_at: v.publishedAt ? new Date(v.publishedAt).toISOString() : null,
     price_inr: v.price,
     stock_name: v.stock.trim() || null,
     ticker: v.ticker.trim() || null,
@@ -12,6 +13,7 @@ export function toRow(v: CallDraftParsed) {
     entry: v.entry > 0 ? v.entry : null,
     target: v.target > 0 ? v.target : null,
     stop_loss: v.stopLoss > 0 ? v.stopLoss : null,
+    exit_price: v.exitPrice ?? null,
     current_price: v.currentPrice > 0 ? v.currentPrice : (v.entry > 0 ? v.entry : null),
     term: v.term,
     coverage: v.coverage,
