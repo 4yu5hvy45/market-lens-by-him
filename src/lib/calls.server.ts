@@ -48,6 +48,11 @@ export function mapPublic(row: Row): PublicCall {
     rawPotentialOverride === null || rawPotentialOverride === undefined || rawPotentialOverride === ""
       ? undefined
       : Number(rawPotentialOverride);
+  const rawRealisedPnlOverride = row["realised_pnl_pct_override"];
+  const realisedPnlPctOverride =
+    rawRealisedPnlOverride === null || rawRealisedPnlOverride === undefined || rawRealisedPnlOverride === ""
+      ? undefined
+      : Number(rawRealisedPnlOverride);
   const entry = Number(row["entry"] ?? 0);
   const target = Number(row["target"] ?? 0);
   const direction = row["direction"] as PublicCall["direction"];
@@ -102,6 +107,9 @@ export function mapPublic(row: Row): PublicCall {
           ...(row["exit_price"] === null || row["exit_price"] === undefined
             ? {}
             : { exitPrice: Number(row["exit_price"]) }),
+          ...(realisedPnlPctOverride !== undefined && Number.isFinite(realisedPnlPctOverride)
+            ? { realisedPnlPctOverride }
+            : {}),
           ...(row["chart_image"] ? { chartImage: String(row["chart_image"]) } : {}),
         }),
   };
@@ -120,6 +128,11 @@ export function mapFull(row: Row): FullCall {
     rawOverride === null || rawOverride === undefined || rawOverride === ""
       ? undefined
       : Number(rawOverride);
+  const rawRealisedPnlOverride = row["realised_pnl_pct_override"];
+  const realisedPnlPctOverride =
+    rawRealisedPnlOverride === null || rawRealisedPnlOverride === undefined || rawRealisedPnlOverride === ""
+      ? undefined
+      : Number(rawRealisedPnlOverride);
   return {
     id: String(row["id"]),
     callNumber: Number(row["call_number"]),
@@ -152,6 +165,9 @@ export function mapFull(row: Row): FullCall {
     stopLoss,
     currentPrice: Number(row["current_price"]),
     ...(row["exit_price"] === null ? {} : { exitPrice: Number(row["exit_price"]) }),
+    ...(realisedPnlPctOverride !== undefined && Number.isFinite(realisedPnlPctOverride)
+      ? { realisedPnlPctOverride }
+      : {}),
     changePct: Number(row["change_pct"] ?? 0),
     summary: String(row["summary"] ?? ""),
     view: String(row["view_text"] ?? ""),

@@ -263,6 +263,28 @@ function CallEditor() {
               onChange={(v) => set("exitPrice", v)}
             />
           )}
+          {form.status === "closed" || form.status === "archived" ? (
+            <label className="block sm:col-span-2">
+              <span className="mb-1.5 block text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Realised gain / loss override (%)
+              </span>
+              <input
+                inputMode="decimal"
+                type="number"
+                step="0.01"
+                className={`${inputClass} num text-base font-semibold`}
+                value={form.realisedPnlPctOverride ?? ""}
+                placeholder="Auto-calculate from entry and exit"
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  set("realisedPnlPctOverride", raw === "" ? undefined : Number(raw));
+                }}
+              />
+              <span className="mt-1 block text-[11px] text-muted-foreground">
+                Use a negative number for a loss, e.g. -4.25. Leave empty to calculate from entry and exit.
+              </span>
+            </label>
+          ) : null}
         </Card>
 
         <Card title="Chart reference (daily)" full>

@@ -27,6 +27,8 @@ export function toRow(v: CallDraftParsed) {
     chart_image: v.chartImage ?? null,
     potential_pct_override:
       v.potentialPctOverride === undefined ? null : v.potentialPctOverride,
+    realised_pnl_pct_override:
+      v.realisedPnlPctOverride === undefined ? null : v.realisedPnlPctOverride,
     checkout_headline: v.checkoutHeadline ?? "",
     checkout_subtext: v.checkoutSubtext ?? "",
   };

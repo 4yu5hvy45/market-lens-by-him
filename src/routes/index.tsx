@@ -148,11 +148,10 @@ function LiveCalls() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                  <th className="px-5 py-3 font-bold">No.</th>
                   <th className="px-5 py-3 font-bold">Trade</th>
+                  <th className="px-5 py-3 text-right font-bold">Gain</th>
                   <th className="px-5 py-3 font-bold">Entry</th>
                   <th className="hidden px-5 py-3 font-bold sm:table-cell">Exit</th>
-                  <th className="px-5 py-3 text-right font-bold">Gain</th>
                   <th className="hidden px-5 py-3 text-right font-bold md:table-cell">Closed on</th>
                 </tr>
               </thead>
@@ -164,9 +163,6 @@ function LiveCalls() {
                       key={c.id}
                       className="border-b border-border/70 transition-colors last:border-0 hover:bg-surface-2"
                     >
-                      <td className="num px-5 py-3.5 text-xs text-muted-foreground">
-                        {String(c.callNumber).padStart(2, "0")}
-                      </td>
                       <td className="px-5 py-3.5 font-semibold">
                         <Link
                           to="/call/$callId"
@@ -176,16 +172,16 @@ function LiveCalls() {
                           {c.stock}
                         </Link>
                       </td>
-                      <td className="num px-5 py-3.5">{fmtCurrency(c.entry, 0)}</td>
-                      <td className="num hidden px-5 py-3.5 sm:table-cell">
-                        {fmtCurrency(c.exitPrice ?? c.currentPrice, 0)}
-                      </td>
                       <td
                         className={`num px-5 py-3.5 text-right font-extrabold ${
                           pnl >= 0 ? "text-bull" : "text-bear"
                         }`}
                       >
                         {fmtPct(pnl, 2)}
+                      </td>
+                      <td className="num px-5 py-3.5">{fmtCurrency(c.entry, 0)}</td>
+                      <td className="num hidden px-5 py-3.5 sm:table-cell">
+                        {fmtCurrency(c.exitPrice ?? c.currentPrice, 0)}
                       </td>
                       <td className="hidden px-5 py-3.5 text-right text-xs font-light text-muted-foreground md:table-cell">
                         {fmtDate(c.closedAt ?? c.publishedAt)}

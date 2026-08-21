@@ -125,6 +125,8 @@ export interface StockCall {
   riskPctDisplay?: number;
   /** Optional admin override for the public "Potential left" value. */
   potentialPctOverride?: number;
+  /** Optional admin override for realised gain/loss on closed calls. */
+  realisedPnlPctOverride?: number;
   checkoutHeadline?: string;
   checkoutSubtext?: string;
 }
@@ -149,9 +151,13 @@ export const livePnlPct = (c: StockCall) =>
     ? ((c.currentPrice - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1)
     : 0;
 
-export const closedPnlPct = (c: StockCall) =>
-  c.exitPrice && c.entry > 0
+export const closedPnlPct = (c: StockCall) => {
+  if (c.realisedPnlPctOverride !== undefined && Number.isFinite(c.realisedPnlPctOverride)) {
+    return c.realisedPnlPctOverride;
+  }
+  return c.exitPrice && c.entry > 0
     ? ((c.exitPrice - c.entry) / c.entry) * 100 * (c.direction === "short" ? -1 : 1)
     : 0;
+};
 
 export const isUnlocked = (c: StockCall) => c.access === "free" || c.status !== "live";

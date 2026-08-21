@@ -39,6 +39,10 @@ export const callDraftSchema = z.object({
     (value) => (value === "" || value === null || value === undefined ? undefined : Number(value)),
     z.number().finite().optional(),
   ),
+  realisedPnlPctOverride: z.preprocess(
+    (value) => (value === "" || value === null || value === undefined ? undefined : Number(value)),
+    z.number().finite().optional(),
+  ),
   checkoutHeadline: z.string().default(""),
   checkoutSubtext: z.string().default(""),
 });

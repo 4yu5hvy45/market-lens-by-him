@@ -71,9 +71,9 @@ function ClosedCalls() {
           <thead>
             <tr className="border-b border-border text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
               <th className="px-5 py-3 font-medium">Trade</th>
+              <th className="px-5 py-3 text-right font-medium">Gain</th>
               <th className="px-5 py-3 font-medium">Entry</th>
               <th className="hidden px-5 py-3 font-medium sm:table-cell">Exit</th>
-              <th className="px-5 py-3 text-right font-medium">Gain</th>
               <th className="hidden px-5 py-3 text-right font-medium md:table-cell">Closed on</th>
               <th className="hidden px-5 py-3 text-right font-medium sm:table-cell">Result</th>
             </tr>
@@ -89,12 +89,12 @@ function ClosedCalls() {
                       {c.stock}
                     </Link>
                   </td>
+                  <td className={`num px-5 py-4 text-right font-semibold ${win ? "text-bull" : "text-bear"}`}>
+                    {fmtPct(pnl, 2)}
+                  </td>
                   <td className="num px-5 py-4">{fmtCurrency(c.entry, 0)}</td>
                   <td className="num hidden px-5 py-4 sm:table-cell">
                     {fmtCurrency(c.exitPrice ?? c.currentPrice, 0)}
-                  </td>
-                  <td className={`num px-5 py-4 text-right font-semibold ${win ? "text-bull" : "text-bear"}`}>
-                    {fmtPct(pnl, 2)}
                   </td>
                   <td className="hidden px-5 py-4 text-right text-xs font-light text-muted-foreground md:table-cell">
                     {fmtDate(c.closedAt ?? c.publishedAt)}
